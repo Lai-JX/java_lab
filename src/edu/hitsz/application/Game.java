@@ -3,6 +3,7 @@ package edu.hitsz.application;
 import edu.hitsz.aircraft.*;
 import edu.hitsz.bullet.AbstractBullet;
 import edu.hitsz.basic.FlyingObject;
+import edu.hitsz.bullet.EnemyBullet;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,6 +32,7 @@ public class Game extends JPanel {
     private int timeInterval = 40;
 
     private final HeroAircraft heroAircraft;
+
     private final List<AbstractAircraft> enemyAircrafts;
     private final List<AbstractBullet> heroBullets;
     private final List<AbstractBullet> enemyBullets;
@@ -79,15 +81,25 @@ public class Game extends JPanel {
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
                 System.out.println(time);
-                // 新敌机产生
+                // 新敌机产生 随机产生一架普通敌机或精英敌机
                 if (enemyAircrafts.size() < enemyMaxNumber) {
-                    enemyAircrafts.add(new MobEnemy(
-                            (int) ( Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth()))*1,
-                            (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2)*1,
-                            0,
-                            10,
-                            30
-                    ));
+                    if(Math.random()< 0.5) {
+                        enemyAircrafts.add(new MobEnemy(
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())) * 1,
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
+                                0,
+                                10,
+                                30
+                        ));
+                    } else {
+                        enemyAircrafts.add(new EliteEnemy(
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())) * 1,
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
+                                0,
+                                10,
+                                30
+                        ));
+                    }
                 }
                 // 飞机射出子弹
                 shootAction();
@@ -143,6 +155,11 @@ public class Game extends JPanel {
 
     private void shootAction() {
         // TODO 敌机射击
+        for(AbstractAircraft obj : enemyAircrafts){
+            if(obj instanceof EliteEnemy){
+                enemyBullets.addAll(((EliteEnemy)obj).shoot());
+            }
+        }
 
         // 英雄射击
         heroBullets.addAll(heroAircraft.shoot());
