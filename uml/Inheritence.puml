@@ -45,12 +45,18 @@ abstract class AbstractBullet
 
 FlyingObject <|-- AbstractAircraft
 FlyingObject <|-- AbstractBullet
+FlyingObject <|-- AbstractProp
 
 AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- EliteEnemy
 AbstractAircraft <|-- MobEnemy
 
 AbstractBullet <|-- HeroBullet
 AbstractBullet <|-- EnemyBullet
+
+AbstractProp <|-- BloodProp
+AbstractProp <|-- BombProp
+AbstractProp <|-- BulletProp
 
 class HeroAircraft {
     - int shootNum
@@ -58,6 +64,14 @@ class HeroAircraft {
     - int direction
     + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp):void
     + forward():void
+    + shoot():List<Bullet>
+}
+
+class EliteEnemy {
+    - int shootNum
+    - int power
+    - int direction
+    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp):void
     + shoot():List<Bullet>
 }
 
@@ -75,6 +89,26 @@ class HeroBullet {
 class EnemyBullet {
     + EnemyBullet(int locationX, int locationY,
      int speedX, int speedY, int power):void
+}
+
+abstract class AbstractProp {
+    + AbstractProp(int locationX, int locationY, int speedX, int speedY):void,
+    + propWork():void
+}
+
+class BloodProp {
+    + BloodProp(int locationX, int locationY, int speedX, int speedY):void,
+    + propWork():void
+}
+
+class BombProp {
+    + BombProp(int locationX, int locationY, int speedX, int speedY):void,
+    + propWork():void
+}
+
+class BulletProp {
+    + BulletProp(int locationX, int locationY, int speedX, int speedY):void,
+    + propWork():void
 }
 
 @enduml

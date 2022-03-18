@@ -88,7 +88,7 @@ public class Game extends JPanel {
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
                 System.out.println(time);
-                System.out.println(enemyAircrafts.size() + "" + enemyNumber);
+//                System.out.println(enemyAircrafts.size() + "" + enemyNumber);
                 // 新敌机产生 随机产生一架普通敌机或精英敌机
                 if (enemyAircrafts.size() < enemyMaxNumber) {
                     enemyNumber++;
@@ -119,6 +119,9 @@ public class Game extends JPanel {
 
             // 飞机移动
             aircraftsMoveAction();
+
+            // 道具移动
+            propMoveAction();
 
             // 撞击检测
             crashCheckAction();
@@ -189,6 +192,12 @@ public class Game extends JPanel {
         }
     }
 
+    private void propMoveAction() {
+        for (AbstractProp prop : props) {
+            prop.forward();
+        }
+    }
+
 
     /**
      * 碰撞检测：
@@ -234,6 +243,8 @@ public class Game extends JPanel {
                     if (enemyAircraft.notValid()) {
                         // TODO 获得分数，产生道具补给
                         if(enemyAircraft instanceof EliteEnemy){
+                            //如果击落的是精英敌机，则多获得10分
+                            score += 10;
                             // 如果被击落的是精英敌机，则随机产生道具或不产生道具
                             Random rd = new Random();
                             int x = rd.nextInt(4);
@@ -243,21 +254,21 @@ public class Game extends JPanel {
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
-                                        0));
+                                        5));
                             }
                             else if( x == 1){//获得爆炸道具
                                 props.add(new BombProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
-                                        0));
+                                        5));
                             }
                             else if( x == 2){//获得子弹道具
                                 props.add(new BulletProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
-                                        0));
+                                        5));
                             }
                             else{//未获得道具
 
