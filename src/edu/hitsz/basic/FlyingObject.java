@@ -81,6 +81,9 @@ public abstract class FlyingObject {
             // 横向超出边界后反向
             speedX = -speedX;
         }
+        if(locationY >= Main.WINDOW_HEIGHT){
+            this.isValid = false;
+        }
     }
 
     /**
