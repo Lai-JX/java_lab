@@ -6,7 +6,7 @@ import edu.hitsz.bullet.EnemyBullet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class EliteEnemy extends AbstractAircraft{
+public class EliteEnemy extends EnemyAircraft{
 
     /** 攻击方式 */
     private int shootNum = 1;     //子弹一次发射数量

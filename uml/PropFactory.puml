@@ -1,0 +1,80 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class game
+{
+    + action():void
+    - crashCheckAction():void
+    - propMoveAction():void
+
+}
+
+
+
+abstract class AbstractProp
+{
+    + AbstractProp(int locationX, int locationY, int speedX, int speedY)
+    + propWork():void
+}
+interface PropFactory
+{
+    + AbstractProp createProp(int locationX, int locationY, int speedX, int speedY)
+}
+class BloodPropFactory
+{
+    + createProp(int locationX, int locationY, int speedX, int speedY):AbstractProp
+}
+class BombPropFactory
+{
+    + createProp(int locationX, int locationY, int speedX, int speedY):AbstractProp
+}
+class BulletPropFactory
+{
+    + createProp(int locationX, int locationY, int speedX, int speedY):AbstractProp
+}
+
+
+
+class BloodProp {
+    + BloodProp(int locationX, int locationY, int speedX, int speedY)
+    + propWork():void
+}
+
+class BombProp {
+    + BombProp(int locationX, int locationY, int speedX, int speedY)
+    + propWork():void
+}
+
+class BulletProp {
+    + BulletProp(int locationX, int locationY, int speedX, int speedY)
+    + propWork():void
+}
+
+game..>PropFactory
+game..>AbstractProp
+
+
+
+AbstractProp<|--BulletProp
+AbstractProp<|--BombProp
+AbstractProp<|--BloodProp
+
+PropFactory<|..BloodPropFactory
+PropFactory<|..BombPropFactory
+PropFactory<|..BulletPropFactory
+
+BloodPropFactory..>BloodProp
+BulletPropFactory..>BulletProp
+BombPropFactory..>BombProp
+
+
+
+
+
+
+
+
+
+
+
+@enduml

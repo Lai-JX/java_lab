@@ -3,10 +3,7 @@ package edu.hitsz.application;
 import edu.hitsz.aircraft.*;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
-import edu.hitsz.prop.AbstractProp;
-import edu.hitsz.prop.BloodProp;
-import edu.hitsz.prop.BombProp;
-import edu.hitsz.prop.BulletProp;
+import edu.hitsz.prop.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,10 +33,12 @@ public class Game extends JPanel {
 
     private final HeroAircraft heroAircraft;
 
-    private final List<AbstractAircraft> enemyAircrafts;
+    private final List<EnemyAircraft> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
     private final List<AbstractProp> props;
+    private PropFactory propFactory;
+    private EnemyFactory enemyFactory;
 
     private int enemyMaxNumber = 5;
     private int enemyNumber = 0;
@@ -56,10 +55,7 @@ public class Game extends JPanel {
 
 
     public Game() {
-        heroAircraft = new HeroAircraft(
-                Main.WINDOW_WIDTH / 2,
-                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
-                0, 0, 10000);
+        heroAircraft = HeroAircraft.getInstance();
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -92,7 +88,8 @@ public class Game extends JPanel {
                 if (enemyAircrafts.size() < enemyMaxNumber) {
                     enemyNumber++;
                     if(Math.random()< 0.5) {
-                        enemyAircrafts.add(new MobEnemy(
+                        enemyFactory = new MobEnemyFactory();
+                        enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())) * 1,
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
                                 0,
@@ -100,7 +97,8 @@ public class Game extends JPanel {
                                 30
                         ));
                     } else {
-                        enemyAircrafts.add(new EliteEnemy(
+                        enemyFactory = new EliteEnemyFactory();
+                        enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())) * 1,
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
                                 0,
@@ -249,21 +247,24 @@ public class Game extends JPanel {
                             int x = rd.nextInt(4);
 //                            System.out.println(x);
                             if(x == 0){//获得加血道具
-                                props.add(new BloodProp(
+                                propFactory = new BloodPropFactory();
+                                props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
                                         5));
                             }
                             else if( x == 1){//获得爆炸道具
-                                props.add(new BombProp(
+                                propFactory = new BombPropFactory();
+                                props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
                                         5));
                             }
                             else if( x == 2){//获得子弹道具
-                                props.add(new BulletProp(
+                                propFactory = new BulletPropFactory();
+                                props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
@@ -309,6 +310,7 @@ public class Game extends JPanel {
      * 后处理：
      * 1. 删除无效的子弹
      * 2. 删除无效的敌机
+     *    删除无效的道具
      * 3. 检查英雄机生存
      * <p>
      * 无效的原因可能是撞击或者飞出边界
