@@ -5,7 +5,6 @@ class game
 {
     + action():void
     - crashCheckAction():void
-    - propMoveAction():void
 
 }
 

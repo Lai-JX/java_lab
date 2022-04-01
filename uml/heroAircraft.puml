@@ -8,6 +8,7 @@ class HeroAircraft {
     - int direction
     - volatile static HeroAircraft heroAircraft
     - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getInstance():HeroAircraft
     + forward():void
     + shoot():List<BaseBullet>
 }

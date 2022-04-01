@@ -33,7 +33,7 @@ public class Game extends JPanel {
 
     private final HeroAircraft heroAircraft;
 
-    private final List<EnemyAircraft> enemyAircrafts;
+    private final List<AbstractEnemyAircraft> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
     private final List<AbstractProp> props;
@@ -62,8 +62,17 @@ public class Game extends JPanel {
         enemyBullets = new LinkedList<>();
         props = new LinkedList<>();
 
+        ThreadFactory gameThread = new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setName("game thread");
+                return t;
+            }
+        };
+
         //Scheduled 线程池，用于定时任务调度
-        executorService = new ScheduledThreadPoolExecutor(1);
+        executorService = new ScheduledThreadPoolExecutor(1,gameThread);
 
         //启动英雄机鼠标监听
         new HeroController(this, heroAircraft);
@@ -164,7 +173,7 @@ public class Game extends JPanel {
 
     private void shootAction() {
         // TODO 敌机射击
-        for(AbstractAircraft obj : enemyAircrafts){
+        for(AbstractEnemyAircraft obj : enemyAircrafts){
             if(obj instanceof EliteEnemy){
                 enemyBullets.addAll(((EliteEnemy)obj).shoot());
             }
@@ -204,8 +213,8 @@ public class Game extends JPanel {
      */
     private void crashCheckAction() {
         // TODO 敌机子弹攻击英雄
-        for (BaseBullet enemy_bullet : enemyBullets) {
-            if (enemy_bullet.notValid()) {
+        for (BaseBullet enemyBullet : enemyBullets) {
+            if (enemyBullet.notValid()) {
                 continue;
             }
             if (heroAircraft.notValid()) {
@@ -213,11 +222,11 @@ public class Game extends JPanel {
                 // 避免多个子弹重复击毁英雄机的判定
                 continue;
             }
-            if (heroAircraft.crash(enemy_bullet)) {
+            if (heroAircraft.crash(enemyBullet)) {
                 // 英雄机撞击到敌机子弹
                 // 英雄机损失一定生命值
-                heroAircraft.decreaseHp(enemy_bullet.getPower());
-                enemy_bullet.vanish();
+                heroAircraft.decreaseHp(enemyBullet.getPower());
+                enemyBullet.vanish();
             }
         }
 
@@ -226,7 +235,7 @@ public class Game extends JPanel {
             if (bullet.notValid()) {
                 continue;
             }
-            for (AbstractAircraft enemyAircraft : enemyAircrafts) {
+            for (AbstractEnemyAircraft enemyAircraft : enemyAircrafts) {
                 if (enemyAircraft.notValid()) {
                     // 已被其他子弹击毁的敌机，不再检测
                     // 避免多个子弹重复击毁同一敌机的判定

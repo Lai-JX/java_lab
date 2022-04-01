@@ -5,9 +5,6 @@
 class game
 {
     + action():void
-    - crashCheckAction():void
-    - aircraftsMoveAction():void
-    - shootAction():void
 
 }
 
@@ -60,14 +57,15 @@ class MobEnemy {
 game..>EnemyFactory
 game..>EnemyAircraft
 
+EnemyFactory<|..BossEnemyFactory
+EnemyFactory<|..EliteEnemyFactory
+EnemyFactory<|..MobEnemyFactory
 
 EnemyAircraft<|--BossEnemy
 EnemyAircraft<|--EliteEnemy
 EnemyAircraft<|--MobEnemy
 
-EnemyFactory<|..BossEnemyFactory
-EnemyFactory<|..EliteEnemyFactory
-EnemyFactory<|..MobEnemyFactory
+
 
 BossEnemyFactory..>BossEnemy
 EliteEnemyFactory..>EliteEnemy
