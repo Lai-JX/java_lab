@@ -51,6 +51,7 @@ public class Game extends JPanel {
     private boolean gameOverFlag = false;
     private int score = 0;
     private int time = 0;
+    private int counter = 0;
     /**
      * 周期（ms)
      * 指示子弹的发射、敌机的产生频率
@@ -129,14 +130,15 @@ public class Game extends JPanel {
                                 30
                         ));
                     }
-                    if(BossEnemy.bossNum == 0){
+                    if(BossEnemy.bossNum == 0 && counter >= 300){   // 每300分产生一架boss敌机
+                        counter = 0;
                         enemyFactory = new BossEnemyFactory();
                         enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_ENEMY_IMAGE.getWidth()/4)) * 1,
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
                                 2,
                                 0,
-                                100
+                                300
                         ));
                     }
                 }
@@ -293,9 +295,14 @@ public class Game extends JPanel {
                     if (enemyAircraft.notValid()) {
                         // TODO 获得分数，产生道具补给
                         if(enemyAircraft instanceof EliteEnemy || enemyAircraft instanceof BossEnemy){
-                            //如果击落的是精英敌机，则多获得10分
+                            //如果击落的是精英敌机或boss敌机，则多获得10分
                             score += 10;
-                            // 如果被击落的是精英敌机，则随机产生道具或不产生道具
+                            counter += 10;
+                            if(enemyAircraft instanceof BossEnemy){
+                                score += 10;    // 击落精英敌机，多加10分
+                                counter += 10;
+                            }
+                            // 如果被击落的是精英敌机或boss，则随机产生道具或不产生道具
                             Random rd = new Random();
                             int x = rd.nextInt(10);
 //                            System.out.println(x);
@@ -329,6 +336,7 @@ public class Game extends JPanel {
 
                         }
                         score += 10;
+                        counter += 10;
                     }
                 }
                 // 英雄机 与 敌机 相撞，均损毁
