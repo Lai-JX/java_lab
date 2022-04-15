@@ -1,5 +1,8 @@
 package edu.hitsz.application;
 
+import edu.hitsz.Dao.DaoInterface;
+import edu.hitsz.Dao.Record;
+import edu.hitsz.Dao.RecordDao;
 import edu.hitsz.aircraft.*;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
@@ -8,6 +11,7 @@ import edu.hitsz.prop.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -39,6 +43,7 @@ public class Game extends JPanel {
     private final List<AbstractProp> props;
     private PropFactory propFactory;
     private EnemyFactory enemyFactory;
+    private RecordDao recordDao;
 
     private int enemyMaxNumber = 5;
     private int enemyNumber = 0;
@@ -56,6 +61,15 @@ public class Game extends JPanel {
 
     public Game() {
         heroAircraft = HeroAircraft.getInstance();
+        // 建立数据访问对象，并从scoreRecord.txt文件中读取之前的数据
+        recordDao = new RecordDao();
+        try {
+            recordDao.readFromFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -110,9 +124,19 @@ public class Game extends JPanel {
                         enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())) * 1,
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
-                                0,
+                                (int)(Math.random() * 11 -5),
                                 10,
                                 30
+                        ));
+                    }
+                    if(BossEnemy.bossNum == 0){
+                        enemyFactory = new BossEnemyFactory();
+                        enemyAircrafts.add(enemyFactory.createEnemy(
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_ENEMY_IMAGE.getWidth()/4)) * 1,
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
+                                2,
+                                0,
+                                100
                         ));
                     }
                 }
@@ -140,10 +164,24 @@ public class Game extends JPanel {
 
             // 游戏结束检查
             if (heroAircraft.getHp() <= 0) {
+                // 记录数据
+                recordDao.add(new Record("testUserName",this.score));
+//                Record r = recordDao.findFirst();
+                // 写入scoreRedord.txt
+                try {
+                    recordDao.writeToFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                // 根据得分进行排序并打印
+                recordDao.sortAndPrintf();
+
                 // 游戏结束
                 executorService.shutdown();
                 gameOverFlag = true;
                 System.out.println("Game Over!");
+
             }
 
         };
@@ -175,12 +213,15 @@ public class Game extends JPanel {
         // TODO 敌机射击
         for(AbstractEnemyAircraft obj : enemyAircrafts){
             if(obj instanceof EliteEnemy){
-                enemyBullets.addAll(((EliteEnemy)obj).shoot());
+                enemyBullets.addAll(((EliteEnemy)obj).executeStrategy());
+            }
+            if(obj instanceof BossEnemy){
+                enemyBullets.addAll(((BossEnemy)obj).executeStrategy());
             }
         }
 
         // 英雄射击
-        heroBullets.addAll(heroAircraft.shoot());
+        heroBullets.addAll(heroAircraft.executeStrategy());
     }
 
     private void bulletsMoveAction() {
@@ -194,6 +235,9 @@ public class Game extends JPanel {
 
     private void aircraftsMoveAction() {
         for (AbstractAircraft enemyAircraft : enemyAircrafts) {
+//            if(enemyAircraft instanceof EliteEnemy){
+//                enemyAircraft.setSpeedX((int)(Math.random() * 11 - 5 ));// 给精英敌机-5~5的横向速度
+//            }
             enemyAircraft.forward();
         }
     }
@@ -248,14 +292,14 @@ public class Game extends JPanel {
                     bullet.vanish();
                     if (enemyAircraft.notValid()) {
                         // TODO 获得分数，产生道具补给
-                        if(enemyAircraft instanceof EliteEnemy){
+                        if(enemyAircraft instanceof EliteEnemy || enemyAircraft instanceof BossEnemy){
                             //如果击落的是精英敌机，则多获得10分
                             score += 10;
                             // 如果被击落的是精英敌机，则随机产生道具或不产生道具
                             Random rd = new Random();
-                            int x = rd.nextInt(4);
+                            int x = rd.nextInt(10);
 //                            System.out.println(x);
-                            if(x == 0){//获得加血道具
+                            if(x >= 0 && x < 3){//30%概论获得加血道具
                                 propFactory = new BloodPropFactory();
                                 props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
@@ -263,7 +307,7 @@ public class Game extends JPanel {
                                         0,
                                         5));
                             }
-                            else if( x == 1){//获得爆炸道具
+                            else if( x >= 3 && x < 6){//30%概论获得爆炸道具
                                 propFactory = new BombPropFactory();
                                 props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
@@ -271,7 +315,7 @@ public class Game extends JPanel {
                                         0,
                                         5));
                             }
-                            else if( x == 2){//获得子弹道具
+                            else if( x >= 6 && x < 9){//30%概论获得子弹道具
                                 propFactory = new BulletPropFactory();
                                 props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
@@ -302,12 +346,12 @@ public class Game extends JPanel {
 //                    prop.propWork();
                     prop.vanish();
 //                    System.out.println(prop.notValid());
-                    if(prop instanceof BloodProp){  //获得加血道具，增加10血
-                        heroAircraft.gainHp(10);
+                    if(prop instanceof BloodProp){  //获得加血道具，增加30血
+                        ((BloodProp)prop).propWork(heroAircraft);
                     }else if(prop instanceof BombProp){
-                        ((BombProp)prop).propWork();
+                        ((BombProp)prop).propWork(heroAircraft);
                     }else{
-                        ((BulletProp)prop).propWork();
+                        ((BulletProp)prop).propWork(heroAircraft);
                     }
                 }
 

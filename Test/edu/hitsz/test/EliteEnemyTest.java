@@ -2,6 +2,7 @@ package edu.hitsz.test;
 
 import edu.hitsz.aircraft.EliteEnemy;
 import edu.hitsz.prop.BombProp;
+import edu.hitsz.strategy.DirectShoot;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,7 +14,7 @@ class EliteEnemyTest {
     EliteEnemy eliteEnemy;
     @BeforeEach
     void setUp() {
-        eliteEnemy = new EliteEnemy(10,20,5,10,30);
+        eliteEnemy = new EliteEnemy(10,20,5,10,30, new DirectShoot());
     }
 
     @AfterEach

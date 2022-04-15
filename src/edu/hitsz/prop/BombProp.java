@@ -1,5 +1,7 @@
 package edu.hitsz.prop;
 
+import edu.hitsz.aircraft.HeroAircraft;
+
 public class BombProp extends AbstractProp{
 
     public BombProp (int locationX, int locationY, int speedX, int speedY) {
@@ -7,7 +9,8 @@ public class BombProp extends AbstractProp{
     }
 
     @Override
-    public void propWork(){
+    public void propWork(HeroAircraft heroAircraft){
             System.out.println("BombSupply active!");
+
     }
 }
