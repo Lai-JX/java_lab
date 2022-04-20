@@ -7,14 +7,16 @@ interface StrategyInterface
 class DirectShoot
 class ScatteredShoot
 class BossEnemy
+class EliteEnemy
 class HeroAircraft
-class BulletProp
+
 
 StrategyInterface <|.. DirectShoot
 StrategyInterface <|.. ScatteredShoot
 BossEnemy o--> StrategyInterface
+EliteEnemy o--> StrategyInterface
 HeroAircraft o--> StrategyInterface
-BulletProp ..> HeroAircraft
+
 
 interface StrategyInterface {
     shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType):List<BaseBullet>
@@ -28,5 +30,38 @@ class ScatteredShoot {
     -int shootNum
     -int powwer
     + shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType):List<BaseBullet>
+}
+class HeroAircraft {
+    - StrategyInterface strategy
+    - volatile static HeroAircraft heroAircraft
+    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + getInstance():HeroAircraft
+    + setStrategy(StrategyInterface Strategy):void
+    + forward():void
+    + executeStrategy():List<BaseBullet>
+    + gainHp(int hp):void
+}
+class BossEnemy {
+    -StrategyInterface strategy
+    -static int bossNum = 0
+
+    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp, StrategyInterface strategy)
+
+
+    + void setStrategy(StrategyInterface strategy):void
+    + executeStrategy():List<BaseBullet>
+
+
+    +void decreaseHp(int decrease):void
+}
+class EliteEnemy {
+        -StrategyInterface strategy
+
+        +EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp, StrategyInterface shootMode)
+
+
+        +setStrategy(StrategyInterface strategy):void
+
+        +executeStrategy():List<BaseBullet>
 }
 @enduml
