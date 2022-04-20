@@ -1,0 +1,47 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface DaoInterface
+class Record
+class RecordDao
+
+DaoInterface<|.. RecordDao
+Record <-- RecordDao
+interface DaoInterface {
+        getAllRecord():List<Record>
+        add(Record record):void
+        findFirst():Record
+        sortAndPrintf():void
+        showAll():void
+}
+class RecordDao{
+    - ArrayList<Record> records
+    + readFromFile():void
+    + writeToFile():void
+    +getAllRecord():List<Record>
+    +add(Record record):void
+    +findFirst():Record
+    +sortAndPrintf():void
+    +showAll():void
+}
+class Record{
+        -String name;
+        -int score;
+        -String time;
+
+        +setName(String name):void
+
+        +setScore(int score):void
+
+        +setTime(String time):void
+
+        +getName():String
+
+        +getScore():int
+
+        +getTime():String
+
+        +Record(String name, int score)
+}
+
+@enduml

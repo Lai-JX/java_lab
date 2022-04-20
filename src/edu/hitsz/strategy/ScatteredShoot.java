@@ -24,14 +24,16 @@ public class ScatteredShoot implements StrategyInterface{
         int speedX = 0;
         int speedY = SpeedY + direction*5;
         BaseBullet baseBullet;
+        int speed_add = 6/(shootNum-1);
         for(int i=0; i<shootNum; i++){
-            if (i % 3 == 0){
-                speedX = -5;
-            }else if (i % 3 == 1){
-                speedX = 0;
-            }else {
-                speedX = 5;
-            }
+            speedX = -3 + i * speed_add;
+//            if (i % shootNum == 0){
+//                speedX = -3;
+//            }else if (i % shootNum == 1){
+//                speedX = 0;
+//            }else {
+//                speedX = 3;
+//            }
             // 子弹发射位置相对飞机位置向前偏移
             // 多个子弹横向分散
             if(AircraftType == 1){ //飞机类型是英雄机

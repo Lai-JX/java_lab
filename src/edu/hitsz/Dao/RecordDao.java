@@ -71,6 +71,7 @@ public class RecordDao implements DaoInterface{
         return records.get(0);
     }
 
+    @Override
     public void sortAndPrintf(){
         Collections.sort(records,new SortByScore());
         for(int i = 0;i < records.size();i++){
@@ -79,6 +80,7 @@ public class RecordDao implements DaoInterface{
         }
     }
 
+    @Override
     public void showAll(){
         for(Record record : records){
             System.out.println(record.getName() + "  " + record.getScore() + "  " + record.getTime());

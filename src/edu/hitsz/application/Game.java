@@ -127,18 +127,18 @@ public class Game extends JPanel {
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
                                 (int)(Math.random() * 11 -5),
                                 10,
-                                30
+                                60
                         ));
                     }
-                    if(BossEnemy.bossNum == 0 && counter >= 300){   // 每300分产生一架boss敌机
+                    if(BossEnemy.bossNum == 0 && counter >= 600){   // 每600分产生一架boss敌机
                         counter = 0;
                         enemyFactory = new BossEnemyFactory();
                         enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_ENEMY_IMAGE.getWidth()/4)) * 1,
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
-                                2,
+                                1,
                                 0,
-                                300
+                                600
                         ));
                     }
                 }
@@ -176,6 +176,9 @@ public class Game extends JPanel {
                     e.printStackTrace();
                 }
 
+                System.out.println("********************************************************");
+                System.out.println("                        得分排行榜                        ");
+                System.out.println("********************************************************");
                 // 根据得分进行排序并打印
                 recordDao.sortAndPrintf();
 
@@ -299,8 +302,8 @@ public class Game extends JPanel {
                             score += 10;
                             counter += 10;
                             if(enemyAircraft instanceof BossEnemy){
-                                score += 10;    // 击落精英敌机，多加10分
-                                counter += 10;
+                                score += 20;    // 击落Boss敌机，多加20分
+                                counter += 20;
                             }
                             // 如果被击落的是精英敌机或boss，则随机产生道具或不产生道具
                             Random rd = new Random();

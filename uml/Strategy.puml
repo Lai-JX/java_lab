@@ -1,0 +1,32 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+
+interface StrategyInterface
+class DirectShoot
+class ScatteredShoot
+class BossEnemy
+class HeroAircraft
+class BulletProp
+
+StrategyInterface <|.. DirectShoot
+StrategyInterface <|.. ScatteredShoot
+BossEnemy o--> StrategyInterface
+HeroAircraft o--> StrategyInterface
+BulletProp ..> HeroAircraft
+
+interface StrategyInterface {
+    shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType):List<BaseBullet>
+}
+class DirectShoot {
+    -int shootNum
+    -int powwer
+    + shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType):List<BaseBullet>
+}
+class ScatteredShoot {
+    -int shootNum
+    -int powwer
+    + shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType):List<BaseBullet>
+}
+@enduml
