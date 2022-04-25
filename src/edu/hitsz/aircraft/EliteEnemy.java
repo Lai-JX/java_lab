@@ -1,5 +1,6 @@
 package edu.hitsz.aircraft;
 
+import edu.hitsz.Observer.Subscriber;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.strategy.StrategyInterface;
@@ -7,7 +8,7 @@ import edu.hitsz.strategy.StrategyInterface;
 import java.util.LinkedList;
 import java.util.List;
 
-public class EliteEnemy extends AbstractEnemyAircraft {
+public class EliteEnemy extends AbstractEnemyAircraft implements Subscriber {
 
     /** 攻击方式 */
 //    private int shootNum = 1;     //子弹一次发射数量
@@ -19,6 +20,12 @@ public class EliteEnemy extends AbstractEnemyAircraft {
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp, StrategyInterface shootMode) {
         super(locationX, locationY, speedX, speedY, hp);
         this.strategy = shootMode;
+    }
+
+    @Override
+    public void bombWork(){
+        System.out.println("Elite失效");
+        vanish();
     }
 
     public void setStrategy(StrategyInterface strategy){

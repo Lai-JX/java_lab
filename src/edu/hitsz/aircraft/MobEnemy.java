@@ -1,5 +1,6 @@
 package edu.hitsz.aircraft;
 
+import edu.hitsz.Observer.Subscriber;
 import edu.hitsz.bullet.BaseBullet;
 
 import java.util.LinkedList;
@@ -11,20 +12,18 @@ import java.util.List;
  *
  * @author hitsz
  */
-public class MobEnemy extends AbstractEnemyAircraft {
+public class MobEnemy extends AbstractEnemyAircraft implements Subscriber {
 
     public MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
     }
 
-//    @Override
-//    public void forward() {
-//        super.forward();
-//        // 判定 y 轴向下飞行出界
-//        if (locationY >= Main.WINDOW_HEIGHT ) {
-//            vanish();
-//        }
-//    }
+    @Override
+    public void bombWork(){
+
+        System.out.println("Mob失效");
+        vanish();
+    }
 
 
 }

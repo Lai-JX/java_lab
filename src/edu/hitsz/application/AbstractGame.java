@@ -1,0 +1,524 @@
+package edu.hitsz.application;
+
+import edu.hitsz.aircraft.*;
+import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.basic.AbstractFlyingObject;
+import edu.hitsz.bullet.EnemyBullet;
+import edu.hitsz.prop.*;
+import edu.hitsz.strategy.DirectShoot;
+import edu.hitsz.swing.chooseDifficulty;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.*;
+
+
+public abstract class AbstractGame extends JPanel {
+    protected int backGroundTop = 0;
+
+    /**
+     * Scheduled 线程池，用于任务调度
+     */
+    protected final ScheduledExecutorService executorService;
+
+
+    /**
+     * 时间间隔(ms)，控制刷新频率
+     */
+    private int timeInterval = 40;
+
+    protected final HeroAircraft heroAircraft;
+
+    protected final List<AbstractEnemyAircraft> enemyAircrafts;
+    protected final List<BaseBullet> heroBullets;
+    protected final List<BaseBullet> enemyBullets;
+    protected final List<AbstractProp> props;
+    protected PropFactory propFactory;
+    protected EnemyFactory enemyFactory;
+    //    private RecordDao recordDao;
+    protected MusicThread boss_bgm;
+    protected MusicThread bgm;
+
+
+    protected int enemyNumber = 0;
+
+    protected boolean gameOverFlag = false;
+    public static int score = 0;
+    protected int time = 0;
+    protected int counter = 0;
+    protected int BulletPropStart = 0;
+    /**
+     * 周期（ms)
+     * 指示子弹的发射、敌机的产生频率
+     */
+    private int cycleDuration = 600;
+    private int cycleTime = 0;
+
+
+    public AbstractGame() {
+        heroAircraft = HeroAircraft.getInstance();
+
+        enemyAircrafts = new LinkedList<>();
+        heroBullets = new LinkedList<>();
+        enemyBullets = new LinkedList<>();
+        props = new LinkedList<>();
+
+        ThreadFactory gameThread = new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setName("game thread");
+                return t;
+            }
+        };
+
+        //Scheduled 线程池，用于定时任务调度
+        executorService = new ScheduledThreadPoolExecutor(1,gameThread);
+
+        //启动英雄机鼠标监听
+        new HeroController(this, heroAircraft);
+
+    }
+
+    public boolean isGameOverFlag() {
+        return gameOverFlag;
+    }
+
+    /**
+     * 游戏启动入口，执行游戏逻辑
+     * 需要随游戏模式改变
+     * 精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
+     */
+    public void action() {
+
+        if(chooseDifficulty.isSoundOpen()){
+            bgm = new MusicThread("src/videos/bgm.wav");
+            bgm.start();
+        }
+
+
+        // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
+        Runnable task = () -> {
+
+            time += timeInterval;
+
+
+            // 周期性执行（控制频率）
+            if (timeCountAndNewCycleJudge()) {
+                // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
+                if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
+                    bgm = new MusicThread("src/videos/bgm.wav");
+                    bgm.start();
+                }
+                if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+                    boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
+                    boss_bgm.start();
+                }
+
+                System.out.println(time);
+
+
+                // 产生敌机
+                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
+                creatEnemyAircraft(0.5,5,600);
+
+                // 飞机射出子弹
+                shootAction();
+            }
+
+            // 子弹移动
+            bulletsMoveAction();
+
+            // 飞机移动
+            aircraftsMoveAction();
+
+            // 道具移动
+            propMoveAction();
+
+            // 为炸弹道具增加观察者（子弹和非boss敌机）
+            for(AbstractProp prop : props){
+                if(prop instanceof BombProp){
+                    addEnemyBulletSucscribe((BombProp) prop);
+                }
+            }
+
+            // 撞击检测
+            crashCheckAction(10,20,40, 8000);
+
+            // 后处理
+            postProcessAction();
+
+            //每个时刻重绘界面
+            repaint();
+
+
+
+
+            // 游戏结束检查
+            if (heroAircraft.getHp() <= 0) {
+                // 游戏结束音乐
+                if(chooseDifficulty.isSoundOpen()){
+                    new MusicThread("src/videos/game_over.wav").start();
+                    bgm.setStop(true);
+                    if(BossEnemy.bossNum == 1){
+                        boss_bgm.setStop(true);
+                    }
+                }
+
+                // 游戏结束
+                gameOverFlag = true;
+                executorService.shutdown();
+
+                System.out.println("Game Over!");
+                synchronized (FrameThread.class){// 释放线程game，回到main
+                    notifyAll();
+                }
+            }
+
+        };
+
+        /**
+         * 以固定延迟时间进行执行
+         * 本次任务执行完成后，需要延迟设定的延迟时间，才会执行新的任务
+         */
+        executorService.scheduleWithFixedDelay(task, timeInterval, timeInterval, TimeUnit.MILLISECONDS);
+    }
+
+    //***********************
+    //      Action 各部分
+    //***********************
+
+    // 产生敌机
+    // 参数:精英敌机出现的概论eliteEnemyProbability,产生boss机的阈值creatBoss_Score,最大敌机数量
+    protected void creatEnemyAircraft(double eliteEnemyProbability, int creatBoss_Score, int enemyMaxNumber){
+        // 新敌机产生 随机产生一架普通敌机或精英敌机
+        if (enemyAircrafts.size() < enemyMaxNumber) {
+            enemyNumber++;
+            if(Math.random()< eliteEnemyProbability) {
+                enemyFactory = new EliteEnemyFactory();
+                enemyAircrafts.add(enemyFactory.createEnemy(
+                        (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())) * 1,
+                        (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
+                        (int)(Math.random() * 11 -5),
+                        10,
+                        60
+                ));
+            } else {
+                enemyFactory = new MobEnemyFactory();
+                enemyAircrafts.add(enemyFactory.createEnemy(
+                        (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())) * 1,
+                        (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
+                        0,
+                        10,
+                        30
+                ));
+            }
+            if(BossEnemy.bossNum == 0 && counter >= creatBoss_Score){   // 超过阈值产生一架boss敌机
+                counter = 0;                                            // 恢复记录阶段得分
+                enemyFactory = new BossEnemyFactory();
+                enemyAircrafts.add(enemyFactory.createEnemy(
+                        (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_ENEMY_IMAGE.getWidth()/4)) * 1,
+                        (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
+                        1,
+                        0,
+                        600
+                ));
+                if(chooseDifficulty.isSoundOpen()){
+                    boss_bgm = new MusicThread("src/videos/bgm_boss.wav");
+                    boss_bgm.start();
+                }
+
+            }
+
+        }
+    }
+
+    protected boolean timeCountAndNewCycleJudge() {
+        cycleTime += timeInterval;
+        if (cycleTime >= cycleDuration && cycleTime - timeInterval < cycleTime) {
+            // 跨越到新的周期
+            cycleTime %= cycleDuration;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // 飞机射出子弹
+    protected void shootAction() {
+        // TODO 敌机射击
+        for(AbstractEnemyAircraft obj : enemyAircrafts){
+            if(obj instanceof EliteEnemy){
+                enemyBullets.addAll(((EliteEnemy)obj).executeStrategy());
+            }
+            if(obj instanceof BossEnemy){
+                enemyBullets.addAll(((BossEnemy)obj).executeStrategy());
+            }
+        }
+
+        // 英雄射击
+        heroBullets.addAll(heroAircraft.executeStrategy());
+    }
+
+    // 子弹移动
+    protected void bulletsMoveAction() {
+        for (BaseBullet bullet : heroBullets) {
+            bullet.forward();
+        }
+        for (BaseBullet bullet : enemyBullets) {
+            bullet.forward();
+        }
+    }
+    // 飞机移动
+    protected void aircraftsMoveAction() {
+        for (AbstractAircraft enemyAircraft : enemyAircrafts) {
+            enemyAircraft.forward();
+        }
+    }
+    // 道具移动
+    protected void propMoveAction() {
+        for (AbstractProp prop : props) {
+            prop.forward();
+        }
+    }
+
+
+    /**
+     * 碰撞检测：
+     * 1. 敌机攻击英雄
+     * 2. 英雄攻击/撞击敌机
+     * 3. 英雄获得补给
+     * 需要根据模式对应改变
+     * 参数：击落Mod敌机增加的分数mobScore，击落Elite敌机增加的分数eliteScore，击落boss敌机增加的分数，子弹道具持续时间：bulletPropTime
+     */
+    protected void crashCheckAction(int mobScore, int eliteScore, int bossScore, int bulletPropTime) {
+        // TODO 敌机子弹攻击英雄
+        for (BaseBullet enemyBullet : enemyBullets) {
+            if (enemyBullet.notValid()) {
+                continue;
+            }
+            if (heroAircraft.notValid()) {
+                // 英雄机已被其他子弹击毁不再检测
+                // 避免多个子弹重复击毁英雄机的判定
+                continue;
+            }
+            if (heroAircraft.crash(enemyBullet)) {
+                // 英雄机撞击到敌机子弹
+                // 英雄机损失一定生命值
+                heroAircraft.decreaseHp(enemyBullet.getPower());
+                enemyBullet.vanish();
+            }
+        }
+
+        // 英雄子弹攻击敌机
+        for (BaseBullet bullet : heroBullets) {
+            if (bullet.notValid()) {
+                continue;
+            }
+            for (AbstractEnemyAircraft enemyAircraft : enemyAircrafts) {
+                if (enemyAircraft.notValid()) {
+                    // 已被其他子弹击毁的敌机，不再检测
+                    // 避免多个子弹重复击毁同一敌机的判定
+                    continue;
+                }
+                if (enemyAircraft.crash(bullet)) {
+                    // 敌机撞击到英雄机子弹
+                    // 敌机损失一定生命值
+                    enemyAircraft.decreaseHp(bullet.getPower());
+                    if(chooseDifficulty.isSoundOpen()){
+                        new MusicThread("src/videos/bullet_hit.wav").start();
+                    }
+                    bullet.vanish();
+                    if (enemyAircraft.notValid()) {
+                        score += mobScore;
+                        counter += mobScore;
+                        // TODO 获得分数，产生道具补给
+                        if(enemyAircraft instanceof EliteEnemy || enemyAircraft instanceof BossEnemy){
+                            //如果击落的是精英敌机
+                            if(enemyAircraft instanceof EliteEnemy){
+                                score += eliteScore-mobScore;
+                                counter += eliteScore-mobScore;
+                            }
+                            // 击落Boss敌机
+                            if(enemyAircraft instanceof BossEnemy){
+                                score += bossScore-mobScore;
+                                counter += bossScore-mobScore;
+                                if(chooseDifficulty.isSoundOpen()){
+                                    boss_bgm.setStop(true);
+                                }
+                            }
+                            // 如果被击落的是精英敌机或boss，则随机产生道具或不产生道具
+                            Random rd = new Random();
+                            int x = rd.nextInt(10);
+                            if(x >= 0 && x < 3){//30%概论获得加血道具
+                                propFactory = new BloodPropFactory();
+                                props.add(propFactory.createProp(
+                                        enemyAircraft.getLocationX(),
+                                        enemyAircraft.getLocationY(),
+                                        0,
+                                        5));
+                            }
+                            else if( x >= 3 && x < 6){//30%概论获得爆炸道具
+                                System.out.println("bomb");
+                                propFactory = new BombPropFactory();
+                                BombProp bombProp = (BombProp) propFactory.createProp(
+                                        enemyAircraft.getLocationX(),
+                                        enemyAircraft.getLocationY(),
+                                        0,
+                                        5);
+                                // 为炸弹道具增加观察者（子弹和非boss敌机）
+                                addEnemyBulletSucscribe(bombProp);
+                                props.add(bombProp);
+                            }
+                            else if( x >= 6 && x < 9){//30%概论获得子弹道具
+                                propFactory = new BulletPropFactory();
+                                props.add(propFactory.createProp(
+                                        enemyAircraft.getLocationX(),
+                                        enemyAircraft.getLocationY(),
+                                        0,
+                                        5));
+                            }
+                            else{//未获得道具
+
+                            }
+
+                        }
+                    }
+                }
+                // 英雄机 与 敌机 相撞，均损毁
+                if (enemyAircraft.crash(heroAircraft) || heroAircraft.crash(enemyAircraft)) {
+                    enemyAircraft.vanish();
+                    heroAircraft.decreaseHp(Integer.MAX_VALUE);
+//                    boss_bgm.setStop(true);
+                }
+            }
+        }
+
+        // Todo: 我方获得道具，道具生效
+        for(AbstractProp prop : props){
+            if(prop.crash(heroAircraft) || heroAircraft.crash(prop)){
+                if(!prop.notValid()){
+//                    prop.propWork();
+                    prop.vanish();
+//                    System.out.println(prop.notValid());
+                    if(prop instanceof BloodProp){  //获得加血道具，增加30血
+                        ((BloodProp)prop).propWork(heroAircraft);
+                    }else if(prop instanceof BombProp){
+                        ((BombProp)prop).propWork(heroAircraft);
+                    }else{
+                        ((BulletProp)prop).propWork(heroAircraft);
+                        BulletPropStart = time;
+                    }
+                }
+
+            }
+        }
+        // 道具持续3秒后失效
+        if(BulletPropStart!=0 && time-BulletPropStart > 3000){
+            heroAircraft.setStrategy(new DirectShoot());
+            BulletPropStart = 0;
+        }
+    }
+
+    // 为炸弹道具增加观察者（子弹和非boss敌机）
+    protected void addEnemyBulletSucscribe(BombProp bombProp){
+        // 添加观察者（道具生效需要销毁的敌机）
+        for(AbstractEnemyAircraft enemy : enemyAircrafts){
+            if(enemy instanceof EliteEnemy){
+                bombProp.addSubscriber((EliteEnemy)enemy);
+
+            }else if(enemy instanceof MobEnemy){
+                bombProp.addSubscriber((MobEnemy)enemy);
+            }
+        }
+
+        // 添加观察者（道具生效需要销毁的敌机子弹）
+        for(BaseBullet baseBullet : enemyBullets){
+            bombProp.addSubscriber((EnemyBullet)baseBullet);
+        }
+    }
+
+    /**
+     * 后处理：
+     * 1. 删除无效的子弹
+     * 2. 删除无效的敌机
+     *    删除无效的道具
+     * 3. 检查英雄机生存
+     * <p>
+     * 无效的原因可能是撞击或者飞出边界
+     */
+    protected void postProcessAction() {
+        enemyBullets.removeIf(AbstractFlyingObject::notValid);
+        heroBullets.removeIf(AbstractFlyingObject::notValid);
+        enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
+        props.removeIf(AbstractFlyingObject::notValid);
+    }
+
+
+    //***********************
+    //      Paint 各部分
+    //***********************
+
+    /**
+     * 重写paint方法
+     * 通过重复调用paint方法，实现游戏动画
+     * 需要根据模式改变
+     * @param  g
+     */
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        // 绘制背景,图片滚动
+        drawBackground(g);
+
+        this.backGroundTop += 1;
+        if (this.backGroundTop == Main.WINDOW_HEIGHT) {
+            this.backGroundTop = 0;
+        }
+
+        // 先绘制子弹，后绘制飞机
+        // 这样子弹显示在飞机的下层
+        paintImageWithPositionRevised(g, enemyBullets);
+        paintImageWithPositionRevised(g, heroBullets);
+
+        paintImageWithPositionRevised(g, enemyAircrafts);
+        paintImageWithPositionRevised(g, props);
+
+        g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
+                heroAircraft.getLocationY() - ImageManager.HERO_IMAGE.getHeight() / 2, null);
+
+        //绘制得分和生命值
+        paintScoreAndLife(g);
+
+    }
+    //绘制背景
+    abstract void drawBackground(Graphics g);
+
+    private void paintImageWithPositionRevised(Graphics g, List<? extends AbstractFlyingObject> objects) {
+        if (objects.size() == 0) {
+            return;
+        }
+
+        for (AbstractFlyingObject object : objects) {
+            BufferedImage image = object.getImage();
+            assert image != null : objects.getClass().getName() + " has no image! ";
+            g.drawImage(image, object.getLocationX() - image.getWidth() / 2,
+                    object.getLocationY() - image.getHeight() / 2, null);
+        }
+    }
+
+    private void paintScoreAndLife(Graphics g) {
+        int x = 10;
+        int y = 25;
+        g.setColor(new Color(16711680));
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.drawString("SCORE:" + this.score, x, y);
+        y = y + 20;
+        g.drawString("LIFE:" + this.heroAircraft.getHp(), x, y);
+    }
+
+}

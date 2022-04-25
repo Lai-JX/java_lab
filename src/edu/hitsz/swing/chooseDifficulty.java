@@ -52,7 +52,7 @@ public class chooseDifficulty {
         difficultModel.addActionListener(new ActionListener (){
             @Override
             public void actionPerformed(ActionEvent e){
-                chooseDifficulty.mode = 1;
+                chooseDifficulty.mode = 3;
                 System.out.println("mode=3(困难)");
                 System.out.println("音效开启："+chooseDifficulty.soundOpen);
             }

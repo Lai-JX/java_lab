@@ -12,7 +12,8 @@ public class FrameThread {
 
     private JFrame frame;
     private boolean chooseFinish = false;
-    private Game game;
+    private AbstractGame game;  // 游戏线程
+    private chooseDifficulty c; // 选择模式
 
     public FrameThread(){
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -23,14 +24,21 @@ public class FrameThread {
         this.frame.setBounds(((int) screenSize.getWidth() - WINDOW_WIDTH) / 2, 0,
                 WINDOW_WIDTH, WINDOW_HEIGHT);
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.game = new Game();
+        game = new AbstractGame() {
+            @Override
+            void drawBackground(Graphics g) {
+
+            }
+        };
     }
 
     // 启动游戏页面
     public void gameWork(){
         boolean actionflag = false;// game.action未开启
+
         while(true) {
             synchronized (this) {
+
                 if (game.isGameOverFlag()) {
                     notifyAll();
                 }
@@ -38,9 +46,17 @@ public class FrameThread {
                 if (!chooseFinish || (chooseFinish && game.isGameOverFlag())) {
                     try {
                         wait();
-
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    }
+                }
+                if(!actionflag && chooseFinish){
+                    if(chooseDifficulty.getMode()==1){
+                        game = new EasyModelGame();
+                    }else if(chooseDifficulty.getMode()==2){
+                        game = new CommonModelGame();
+                    }else if(chooseDifficulty.getMode()==3){
+                        game = new DifficultModelGame();
                     }
                 }
                 if (!game.isGameOverFlag() && !actionflag) {
@@ -55,7 +71,7 @@ public class FrameThread {
 
     // 选择模式页面
     public void chooseWork(){
-        chooseDifficulty c = new chooseDifficulty();
+        c = new chooseDifficulty();
         frame.setContentPane(c.getMainPanel());
         frame.setVisible(true);
 
@@ -92,13 +108,13 @@ public class FrameThread {
                         e.printStackTrace();
                     }
                 }
-                if(!showFlag){  // 还没显示过得分榜就显示
+                if(!showFlag) {  // 还没显示过得分榜就显示
+                    System.out.println("xx");
                     scoreList c = new scoreList();
                     frame.setContentPane(c.getMainPanel());
                     frame.setVisible(true);
                     showFlag = true;
                 }
-
             }
             synchronized (this){
                 notify();

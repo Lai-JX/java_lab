@@ -21,15 +21,17 @@ public class Main {
         };
         new Thread(choose,"Menu").start();
 
+
+
         // 创建展示得分榜页面的线程
         Runnable showScore =() ->{
             frameThread.showScoreWork();
-
         };
         Thread showScoreThread = new Thread(showScore,"showScore");
         showScoreThread.start();
 
         // 游戏进行
         frameThread.gameWork();
+
     }
 }
