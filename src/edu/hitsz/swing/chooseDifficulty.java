@@ -28,11 +28,6 @@ public class chooseDifficulty {
     private static boolean soundOpen = true;
 
     public chooseDifficulty() {
-
-//        simpleModel.addActionListener(new simpleAction());
-//        commonModel.addActionListener(new commonAction());
-//        difficultModel.addActionListener(new difficultAction());
-//        chooseBox.addActionListener(new soundAction());
         simpleModel.addActionListener(new ActionListener (){
             @Override
             public void actionPerformed(ActionEvent e){
@@ -52,7 +47,7 @@ public class chooseDifficulty {
         difficultModel.addActionListener(new ActionListener (){
             @Override
             public void actionPerformed(ActionEvent e){
-                chooseDifficulty.mode = 1;
+                chooseDifficulty.mode = 3;
                 System.out.println("mode=3(困难)");
                 System.out.println("音效开启："+chooseDifficulty.soundOpen);
             }
@@ -74,14 +69,7 @@ public class chooseDifficulty {
     public JPanel getMainPanel() {
         return MainPanel;
     }
-//    public void choose(JFrame frame ) {
-////        JFrame currentFrame = new JFrame("chooseDifficulty");
-//        frame.setContentPane(new chooseDifficulty().MainPanel);
-//        frame.setPreferredSize(new Dimension(512,768));
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-////        frame.pack();
-//        frame.setVisible(true);
-//    }
+
 }
 //class simpleAction implements ActionListener {
 //
