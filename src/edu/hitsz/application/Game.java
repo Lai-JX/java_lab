@@ -281,9 +281,6 @@ public class Game extends JPanel {
 
         // 英雄射击
         heroBullets.addAll(heroAircraft.executeStrategy());
-        if(chooseDifficulty.isSoundOpen()){
-            new MusicThread("src/videos/bullet.wav").start();
-        }
     }
 
     private void bulletsMoveAction() {
