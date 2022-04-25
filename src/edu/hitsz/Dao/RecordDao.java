@@ -9,27 +9,48 @@ import java.util.List;
 
 public class RecordDao implements DaoInterface{
     private ArrayList<Record> records;
+    private String filename;
 
-    public RecordDao(){
+    public RecordDao(String name){
         records = new ArrayList<Record>();
-
+        this.filename = name;
+        try {
+            readFromFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
+    @Override
+    public String[][] ToString(){
+        String[][] strings = new String[records.size()][4];
+        for(int i = 0; i< records.size();i++){
+
+            strings[i][0] = (i+1)+"";
+            strings[i][1] = records.get(i).getName();
+            strings[i][2] = ""+records.get(i).getScore();
+            strings[i][3] = records.get(i).getTime();
+        }
+        return strings;
+    }
 
     // 从文件读取序列，并反序列
+    @Override
     public void readFromFile() throws IOException, ClassNotFoundException{
-        File file=new File("scoreRecord.txt");
+        File file=new File(filename);
         if(!file.exists())
         {
             try {
-                file.createNewFile();
+                file.createNewFile( );
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
         // 创建一个反序列化的流，指定要读取的文件
-        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("scoreRecord.txt"));
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename));
         // 把文件的内存，解析为一个Object对象
         Object o = ois.readObject();
         // 使用解析后的对象
@@ -43,9 +64,10 @@ public class RecordDao implements DaoInterface{
     }
 
     // 写回文件中
+    @Override
     public void writeToFile() throws IOException{
         // 创建序列化流 指定文件目的地
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("scoreRecord.txt"));
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
         // 对对象序列化
             oos.writeObject(records);
 
@@ -70,6 +92,8 @@ public class RecordDao implements DaoInterface{
     public Record findFirst(){
         return records.get(0);
     }
+    @Override
+    public Record findLast() {return records.get(records.size()-1);};
 
     @Override
     public void sortAndPrintf(){
@@ -85,6 +109,30 @@ public class RecordDao implements DaoInterface{
         for(Record record : records){
             System.out.println(record.getName() + "  " + record.getScore() + "  " + record.getTime());
         }
+    }
+
+    @Override
+    public void sort(){
+        Collections.sort(records,new SortByScore());
+
+    }
+
+    @Override
+    public boolean delete(int index){
+        if(!records.isEmpty()){
+            records.remove(index);
+        }
+        try {
+            writeToFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    public int getLength(){
+        return records.size();
     }
 }
 

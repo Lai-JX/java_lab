@@ -1,6 +1,8 @@
 package edu.hitsz.prop;
 
 import edu.hitsz.aircraft.HeroAircraft;
+import edu.hitsz.application.MusicThread;
+import edu.hitsz.swing.chooseDifficulty;
 
 public class BombProp extends AbstractProp{
 
@@ -10,7 +12,10 @@ public class BombProp extends AbstractProp{
 
     @Override
     public void propWork(HeroAircraft heroAircraft){
-            System.out.println("BombSupply active!");
+        System.out.println("BombSupply active!");
+        if(chooseDifficulty.soundOpen) {
+            new MusicThread("src/videos/bomb_explosion.wav").start();
+        }
 
     }
 }

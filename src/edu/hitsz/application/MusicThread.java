@@ -19,13 +19,19 @@ public class MusicThread extends Thread {
 
 
     //音频文件名
-    private String filename;
-    private AudioFormat audioFormat;
-    private byte[] samples;
+    protected String filename;
+    protected AudioFormat audioFormat;
+    protected byte[] samples;
+    private boolean stop;
+
+    public boolean isStop() {
+        return stop;
+    }
 
     public MusicThread(String filename) {
         //初始化filename
         this.filename = filename;
+        this.stop = false;
         reverseMusic();
     }
 
@@ -58,6 +64,10 @@ public class MusicThread extends Thread {
         return samples;
     }
 
+    public void setStop(boolean stop) {
+        this.stop = stop;
+    }
+
     public void play(InputStream source) {
         int size = (int) (audioFormat.getFrameSize() * audioFormat.getSampleRate());
         byte[] buffer = new byte[size];
@@ -75,12 +85,12 @@ public class MusicThread extends Thread {
         dataLine.start();
         try {
             int numBytesRead = 0;
-            while (numBytesRead != -1) {
+            while (numBytesRead != -1 & !stop) {
 				//从音频流读取指定的最大数量的数据字节，并将其放入缓冲区中
                 numBytesRead =
                         source.read(buffer, 0, buffer.length);
 				//通过此源数据行将数据写入混频器
-                if (numBytesRead != -1) {
+                if (numBytesRead != -1 & !stop) {
                     dataLine.write(buffer, 0, numBytesRead);
                 }
             }
@@ -97,6 +107,7 @@ public class MusicThread extends Thread {
     @Override
     public void run() {
         InputStream stream = new ByteArrayInputStream(samples);
+
         play(stream);
     }
 }

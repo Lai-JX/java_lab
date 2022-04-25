@@ -1,7 +1,9 @@
 package edu.hitsz.prop;
 
 import edu.hitsz.aircraft.HeroAircraft;
+import edu.hitsz.application.MusicThread;
 import edu.hitsz.strategy.ScatteredShoot;
+import edu.hitsz.swing.chooseDifficulty;
 
 public class BulletProp extends AbstractProp{
 
@@ -13,5 +15,8 @@ public class BulletProp extends AbstractProp{
     public void propWork(HeroAircraft heroAircraft) {
         System.out.println("FireSupply active!");
         heroAircraft.setStrategy(new ScatteredShoot());
+        if(chooseDifficulty.soundOpen) {
+            new MusicThread("src/videos/get_supply.wav").start();
+        }
     }
 }

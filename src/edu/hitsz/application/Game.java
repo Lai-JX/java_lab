@@ -7,6 +7,8 @@ import edu.hitsz.aircraft.*;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.prop.*;
+import edu.hitsz.strategy.DirectShoot;
+import edu.hitsz.swing.chooseDifficulty;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,6 +32,10 @@ public class Game extends JPanel {
      */
     private final ScheduledExecutorService executorService;
 
+    public ScheduledExecutorService getExecutorService() {
+        return executorService;
+    }
+
     /**
      * 时间间隔(ms)，控制刷新频率
      */
@@ -43,15 +49,18 @@ public class Game extends JPanel {
     private final List<AbstractProp> props;
     private PropFactory propFactory;
     private EnemyFactory enemyFactory;
-    private RecordDao recordDao;
+//    private RecordDao recordDao;
+    private MusicThread boss_bgm;
+    private MusicThread bgm;
 
     private int enemyMaxNumber = 5;
     private int enemyNumber = 0;
 
     private boolean gameOverFlag = false;
-    private int score = 0;
+    public static int score = 0;
     private int time = 0;
     private int counter = 0;
+    private int BulletPropStart = 0;
     /**
      * 周期（ms)
      * 指示子弹的发射、敌机的产生频率
@@ -63,14 +72,7 @@ public class Game extends JPanel {
     public Game() {
         heroAircraft = HeroAircraft.getInstance();
         // 建立数据访问对象，并从scoreRecord.txt文件中读取之前的数据
-        recordDao = new RecordDao();
-        try {
-            recordDao.readFromFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+//        recordDao = new RecordDao();
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -94,20 +96,41 @@ public class Game extends JPanel {
 
     }
 
+    public boolean isGameOverFlag() {
+        return gameOverFlag;
+    }
+
     /**
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
+        if(chooseDifficulty.soundOpen){
+            bgm = new MusicThread("src/videos/bgm.wav");
+            bgm.start();
+        }
+
 
         // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
         Runnable task = () -> {
 
             time += timeInterval;
 
+
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
+                // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
+                if(chooseDifficulty.soundOpen && !bgm.isAlive()){
+                    bgm = new MusicThread("src/videos/bgm.wav");
+                    bgm.start();
+                }
+                if(chooseDifficulty.soundOpen && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+                    boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
+                    boss_bgm.start();
+                }
+
                 System.out.println(time);
-//                System.out.println(enemyAircrafts.size() + "" + enemyNumber);
+
+
                 // 新敌机产生 随机产生一架普通敌机或精英敌机
                 if (enemyAircrafts.size() < enemyMaxNumber) {
                     enemyNumber++;
@@ -135,12 +158,18 @@ public class Game extends JPanel {
                         enemyFactory = new BossEnemyFactory();
                         enemyAircrafts.add(enemyFactory.createEnemy(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_ENEMY_IMAGE.getWidth()/4)) * 1,
-                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
                                 1,
                                 0,
                                 600
                         ));
+                        if(chooseDifficulty.soundOpen){
+                            boss_bgm = new MusicThread("src/videos/bgm_boss.wav");
+                            boss_bgm.start();
+                        }
+
                     }
+
                 }
                 // 飞机射出子弹
                 shootAction();
@@ -164,29 +193,46 @@ public class Game extends JPanel {
             //每个时刻重绘界面
             repaint();
 
+
+
             // 游戏结束检查
             if (heroAircraft.getHp() <= 0) {
-                // 记录数据
-                recordDao.add(new Record("testUserName",this.score));
-//                Record r = recordDao.findFirst();
-                // 写入scoreRedord.txt
-                try {
-                    recordDao.writeToFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                System.out.println("xx");
+                if(chooseDifficulty.soundOpen){
+                    new MusicThread("src/videos/game_over.wav").start();
+                    bgm.setStop(true);
+                    if(BossEnemy.bossNum == 1){
+                        boss_bgm.setStop(true);
+                    }
                 }
 
-                System.out.println("********************************************************");
-                System.out.println("                        得分排行榜                        ");
-                System.out.println("********************************************************");
-                // 根据得分进行排序并打印
-                recordDao.sortAndPrintf();
+
+
+
+//                // 记录数据
+//                recordDao.add(new Record("",this.score));
+////                Record r = recordDao.findFirst();
+//                // 写入scoreRedord.txt
+//                try {
+//                    recordDao.writeToFile();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
+//                System.out.println("********************************************************");
+//                System.out.println("                        得分排行榜                        ");
+//                System.out.println("********************************************************");
+//                // 根据得分进行排序并打印
+//                recordDao.sortAndPrintf();
 
                 // 游戏结束
-                executorService.shutdown();
                 gameOverFlag = true;
-                System.out.println("Game Over!");
+                executorService.shutdown();
 
+                System.out.println("Game Over!");
+                synchronized (FrameThread.class){// 释放线程game，回到main
+                    notifyAll();
+                }
             }
 
         };
@@ -196,7 +242,15 @@ public class Game extends JPanel {
          * 本次任务执行完成后，需要延迟设定的延迟时间，才会执行新的任务
          */
         executorService.scheduleWithFixedDelay(task, timeInterval, timeInterval, TimeUnit.MILLISECONDS);
-
+//        if(this.gameOverFlag){
+//            System.out.println("shundowm"+Thread.currentThread().getName());
+//            executorService.shutdown();
+//            synchronized (FrameThread.class){
+//                System.out.println("shundowm"+Thread.currentThread().getName());
+//                notifyAll();
+//                System.out.println("shundowm"+Thread.currentThread().getName());
+//            }
+//        }
     }
 
     //***********************
@@ -227,6 +281,9 @@ public class Game extends JPanel {
 
         // 英雄射击
         heroBullets.addAll(heroAircraft.executeStrategy());
+        if(chooseDifficulty.soundOpen){
+            new MusicThread("src/videos/bullet.wav").start();
+        }
     }
 
     private void bulletsMoveAction() {
@@ -294,6 +351,9 @@ public class Game extends JPanel {
                     // 敌机撞击到英雄机子弹
                     // 敌机损失一定生命值
                     enemyAircraft.decreaseHp(bullet.getPower());
+                    if(chooseDifficulty.soundOpen){
+                        new MusicThread("src/videos/bullet_hit.wav").start();
+                    }
                     bullet.vanish();
                     if (enemyAircraft.notValid()) {
                         // TODO 获得分数，产生道具补给
@@ -304,6 +364,9 @@ public class Game extends JPanel {
                             if(enemyAircraft instanceof BossEnemy){
                                 score += 20;    // 击落Boss敌机，多加20分
                                 counter += 20;
+                                if(chooseDifficulty.soundOpen){
+                                    boss_bgm.setStop(true);
+                                }
                             }
                             // 如果被击落的是精英敌机或boss，则随机产生道具或不产生道具
                             Random rd = new Random();
@@ -346,6 +409,7 @@ public class Game extends JPanel {
                 if (enemyAircraft.crash(heroAircraft) || heroAircraft.crash(enemyAircraft)) {
                     enemyAircraft.vanish();
                     heroAircraft.decreaseHp(Integer.MAX_VALUE);
+//                    boss_bgm.setStop(true);
                 }
             }
         }
@@ -363,10 +427,16 @@ public class Game extends JPanel {
                         ((BombProp)prop).propWork(heroAircraft);
                     }else{
                         ((BulletProp)prop).propWork(heroAircraft);
+                        BulletPropStart = time;
                     }
                 }
 
             }
+        }
+        // 道具持续3秒后失效
+        if(BulletPropStart!=0 && time-BulletPropStart > 3000){
+            heroAircraft.setStrategy(new DirectShoot());
+            BulletPropStart = 0;
         }
     }
 
@@ -402,8 +472,17 @@ public class Game extends JPanel {
         super.paint(g);
 
         // 绘制背景,图片滚动
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop, null);
+        if(chooseDifficulty.mode == 1){
+            g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
+            g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop, null);
+        }else if(chooseDifficulty.mode == 2){
+            g.drawImage(ImageManager.BACKGROUND_IMAGE2, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
+            g.drawImage(ImageManager.BACKGROUND_IMAGE2, 0, this.backGroundTop, null);
+        }else if(chooseDifficulty.mode == 3){
+            g.drawImage(ImageManager.BACKGROUND_IMAGE5, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
+            g.drawImage(ImageManager.BACKGROUND_IMAGE5, 0, this.backGroundTop, null);
+        }
+
         this.backGroundTop += 1;
         if (this.backGroundTop == Main.WINDOW_HEIGHT) {
             this.backGroundTop = 0;

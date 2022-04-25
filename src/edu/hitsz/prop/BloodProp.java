@@ -1,6 +1,8 @@
 package edu.hitsz.prop;
 
 import edu.hitsz.aircraft.HeroAircraft;
+import edu.hitsz.application.MusicThread;
+import edu.hitsz.swing.chooseDifficulty;
 
 public class BloodProp extends AbstractProp{
 
@@ -12,5 +14,8 @@ public class BloodProp extends AbstractProp{
     @Override
     public void propWork(HeroAircraft heroAircraft) {
         heroAircraft.gainHp(30);
+        if(chooseDifficulty.soundOpen){
+            new MusicThread("src/videos/get_supply.wav").start();
+        }
     }
 }

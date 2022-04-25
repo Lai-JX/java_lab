@@ -13,40 +13,68 @@ public class chooseDifficulty {
     private JButton simpleModel;
     private JButton commonModel;
     private JButton difficultModel;
+    private JLabel soundLabel;
+    public static int mode = 0; // 1表示简单模式，2表示普通模式，3表示困难模式
+    public static boolean soundOpen = true;
 
     public chooseDifficulty() {
-        simpleModel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
-        commonModel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-        difficultModel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-        chooseBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
+        simpleModel.addActionListener(new simpleAction());
+        commonModel.addActionListener(new commonAction());
+        difficultModel.addActionListener(new difficultAction());
+        chooseBox.addActionListener(new soundAction());
     }
 
-    public void choose(JFrame frame ) {
-//        JFrame currentFrame = new JFrame("chooseDifficulty");
-        frame.setContentPane(new chooseDifficulty().MainPanel);
-        frame.setPreferredSize(new Dimension(512,768));
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
+    public JPanel getMainPanel() {
+        return MainPanel;
+    }
+//    public void choose(JFrame frame ) {
+////        JFrame currentFrame = new JFrame("chooseDifficulty");
+//        frame.setContentPane(new chooseDifficulty().MainPanel);
+//        frame.setPreferredSize(new Dimension(512,768));
+//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+////        frame.pack();
+//        frame.setVisible(true);
+//    }
+}
+class simpleAction implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        chooseDifficulty.mode = 1;
+        System.out.println("mode=1(简单)");
+        System.out.println("音效开启："+chooseDifficulty.soundOpen);
+    }
+}
+class commonAction implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        chooseDifficulty.mode = 2;
+        System.out.println("mode=2(普通)");
+        System.out.println("音效开启："+chooseDifficulty.soundOpen);
+    }
+}
+class difficultAction implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        chooseDifficulty.mode = 3;
+        System.out.println("mode=3(困难)");
+        System.out.println("音效开启："+chooseDifficulty.soundOpen);
+    }
+}
+class soundAction implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        JComboBox cb = (JComboBox)e.getSource();
+        String selected = (String) cb.getSelectedItem();
+        if(selected == "关"){
+            chooseDifficulty.soundOpen = false;
+        }else{
+            chooseDifficulty.soundOpen = true;
+        }
+
     }
 }
