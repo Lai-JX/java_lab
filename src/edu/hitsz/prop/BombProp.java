@@ -13,7 +13,7 @@ public class BombProp extends AbstractProp{
     @Override
     public void propWork(HeroAircraft heroAircraft){
         System.out.println("BombSupply active!");
-        if(chooseDifficulty.soundOpen) {
+        if(chooseDifficulty.isSoundOpen()) {
             new MusicThread("src/videos/bomb_explosion.wav").start();
         }
 

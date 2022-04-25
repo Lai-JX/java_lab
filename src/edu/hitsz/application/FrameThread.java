@@ -71,7 +71,7 @@ public class FrameThread {
                 }
             }
 
-            if(chooseDifficulty.mode != 0){
+            if(chooseDifficulty.getMode() != 0){
                 chooseFinish = true;
                 synchronized (this){
                     notify();

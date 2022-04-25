@@ -24,10 +24,10 @@ public class scoreList {
     private DefaultTableModel model;
 
     public scoreList() {
-        if(chooseDifficulty.mode==1){
+        if(chooseDifficulty.getMode()==1){
             headerLabel.setText("难度Easy");
             dao = new RecordDao("easyModelScore.txt");
-        }else if(chooseDifficulty.mode==2){
+        }else if(chooseDifficulty.getMode()==2){
             headerLabel.setText("难度Common");
             dao = new RecordDao("commonModelScore.txt");
         }else {

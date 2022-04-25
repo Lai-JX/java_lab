@@ -14,7 +14,7 @@ public class BloodProp extends AbstractProp{
     @Override
     public void propWork(HeroAircraft heroAircraft) {
         heroAircraft.gainHp(30);
-        if(chooseDifficulty.soundOpen){
+        if(chooseDifficulty.isSoundOpen()){
             new MusicThread("src/videos/get_supply.wav").start();
         }
     }

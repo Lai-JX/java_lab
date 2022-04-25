@@ -15,7 +15,7 @@ public class BulletProp extends AbstractProp{
     public void propWork(HeroAircraft heroAircraft) {
         System.out.println("FireSupply active!");
         heroAircraft.setStrategy(new ScatteredShoot());
-        if(chooseDifficulty.soundOpen) {
+        if(chooseDifficulty.isSoundOpen()) {
             new MusicThread("src/videos/get_supply.wav").start();
         }
     }

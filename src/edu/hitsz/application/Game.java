@@ -104,7 +104,7 @@ public class Game extends JPanel {
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
-        if(chooseDifficulty.soundOpen){
+        if(chooseDifficulty.isSoundOpen()){
             bgm = new MusicThread("src/videos/bgm.wav");
             bgm.start();
         }
@@ -119,11 +119,11 @@ public class Game extends JPanel {
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
                 // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
-                if(chooseDifficulty.soundOpen && !bgm.isAlive()){
+                if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
                     bgm = new MusicThread("src/videos/bgm.wav");
                     bgm.start();
                 }
-                if(chooseDifficulty.soundOpen && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+                if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
                     boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
                     boss_bgm.start();
                 }
@@ -163,7 +163,7 @@ public class Game extends JPanel {
                                 0,
                                 600
                         ));
-                        if(chooseDifficulty.soundOpen){
+                        if(chooseDifficulty.isSoundOpen()){
                             boss_bgm = new MusicThread("src/videos/bgm_boss.wav");
                             boss_bgm.start();
                         }
@@ -198,7 +198,7 @@ public class Game extends JPanel {
             // 游戏结束检查
             if (heroAircraft.getHp() <= 0) {
                 System.out.println("xx");
-                if(chooseDifficulty.soundOpen){
+                if(chooseDifficulty.isSoundOpen()){
                     new MusicThread("src/videos/game_over.wav").start();
                     bgm.setStop(true);
                     if(BossEnemy.bossNum == 1){
@@ -281,7 +281,7 @@ public class Game extends JPanel {
 
         // 英雄射击
         heroBullets.addAll(heroAircraft.executeStrategy());
-        if(chooseDifficulty.soundOpen){
+        if(chooseDifficulty.isSoundOpen()){
             new MusicThread("src/videos/bullet.wav").start();
         }
     }
@@ -351,7 +351,7 @@ public class Game extends JPanel {
                     // 敌机撞击到英雄机子弹
                     // 敌机损失一定生命值
                     enemyAircraft.decreaseHp(bullet.getPower());
-                    if(chooseDifficulty.soundOpen){
+                    if(chooseDifficulty.isSoundOpen()){
                         new MusicThread("src/videos/bullet_hit.wav").start();
                     }
                     bullet.vanish();
@@ -364,7 +364,7 @@ public class Game extends JPanel {
                             if(enemyAircraft instanceof BossEnemy){
                                 score += 20;    // 击落Boss敌机，多加20分
                                 counter += 20;
-                                if(chooseDifficulty.soundOpen){
+                                if(chooseDifficulty.isSoundOpen()){
                                     boss_bgm.setStop(true);
                                 }
                             }
@@ -472,13 +472,13 @@ public class Game extends JPanel {
         super.paint(g);
 
         // 绘制背景,图片滚动
-        if(chooseDifficulty.mode == 1){
+        if(chooseDifficulty.getMode() == 1){
             g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
             g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop, null);
-        }else if(chooseDifficulty.mode == 2){
+        }else if(chooseDifficulty.getMode() == 2){
             g.drawImage(ImageManager.BACKGROUND_IMAGE2, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
             g.drawImage(ImageManager.BACKGROUND_IMAGE2, 0, this.backGroundTop, null);
-        }else if(chooseDifficulty.mode == 3){
+        }else if(chooseDifficulty.getMode() == 3){
             g.drawImage(ImageManager.BACKGROUND_IMAGE5, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
             g.drawImage(ImageManager.BACKGROUND_IMAGE5, 0, this.backGroundTop, null);
         }
