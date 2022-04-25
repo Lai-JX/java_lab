@@ -53,7 +53,7 @@ public class DifficultModelGame extends AbstractGame{
 
                 // 产生敌机
                 // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
-                creatEnemyAircraft(0.8,8,400);
+                creatEnemyAircraft(0.8,400,8);
 
                 // 飞机射出子弹
                 shootAction();
