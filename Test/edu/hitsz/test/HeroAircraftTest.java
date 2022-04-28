@@ -17,7 +17,7 @@ class HeroAircraftTest {
     HeroAircraft heroAircraft;
     @BeforeEach
     void setUp() {
-        heroAircraft = HeroAircraft.getInstance();
+        heroAircraft = HeroAircraft.getInstance(1000);
     }
 
     @Test

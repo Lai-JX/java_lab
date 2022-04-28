@@ -109,7 +109,6 @@ public class FrameThread {
                     }
                 }
                 if(!showFlag) {  // 还没显示过得分榜就显示
-                    System.out.println("xx");
                     scoreList c = new scoreList();
                     frame.setContentPane(c.getMainPanel());
                     frame.setVisible(true);

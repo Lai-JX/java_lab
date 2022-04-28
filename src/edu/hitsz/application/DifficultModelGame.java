@@ -9,13 +9,21 @@ import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 public class DifficultModelGame extends AbstractGame{
-    /**
-     * 时间间隔(ms)，控制刷新频率
-     */
-    private int timeInterval = 40;
+
+    private int bossBlood = 200;
+    private int creatBossScore = 200;
+
 
     public DifficultModelGame(){
         super();
+        // 敌机产生周期
+        enemyCycleDuration = 400;
+        // 不产生道具的概率
+        noPropProbability = 0.3;
+        // 子弹道具持续时间
+        bulletPropTime = 4000;
+        // 产生精英敌机的概率
+        eliteEnemyProbability = 0.4;
     }
 
     /**
@@ -29,34 +37,58 @@ public class DifficultModelGame extends AbstractGame{
             bgm = new MusicThread("src/videos/bgm.wav");
             bgm.start();
         }
-
+        System.out.println("困难模式：");
+        System.out.println("\t产生boss敌机的初始阈值:200\t最大敌机数:10\tboss敌机初始血量:200" +
+                "\n\t精英敌机初始速度:14\t" + "精英敌机血量:60\t普通敌机初始速度:11\t普通敌机血量:30" +
+                "\n\t击落boss敌机得分:45\t击落精英敌机得分:10\t击落普通敌机得分:5" +
+                "\n\t除boss机外提升难度的时间间隔:4s" +
+                "\n\t精英敌机概率初始值为:0.4\t敌机产生周期初始值为:400ms\t不产生道具的概率初始值为:0.3\t子弹道具持续时间初始值为4s");
 
         // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
         Runnable task = () -> {
 
             time += timeInterval;
-
+            // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
+            if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
+                bgm = new MusicThread("src/videos/bgm.wav");
+                bgm.start();
+            }
+            if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+                boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
+                boss_bgm.start();
+            }
 
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
-                // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
-                if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
-                    bgm = new MusicThread("src/videos/bgm.wav");
-                    bgm.start();
+
+
+                // 每隔4秒提升难度
+                if(time % 4000 == 0){
+                    eliteEnemyProbability += 0.02;
+                    System.out.print("提升难度！精英敌机概率:"+Double.parseDouble(String.format("%.2f",eliteEnemyProbability)));
+                    enemyCycleDuration -= 20;
+                    System.out.print("!\t敌机产生周期:"+enemyCycleDuration+"ms");
+                    enemySpeedyImproveRate += 0.02;
+                    System.out.print("!\t新增敌机速度提升倍率:"+Double.parseDouble(String.format("%.2f",enemySpeedyImproveRate)));
+                    noPropProbability += 0.02;
+                    System.out.print("!\t击落精英敌机或boss敌机不产生道具的概率:"+Double.parseDouble(String.format("%.2f",noPropProbability)));
+                    bulletPropTime -= 150;
+                    System.out.println("!\t子弹道具持续时间:"+bulletPropTime+"ms");
                 }
-                if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
-                    boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
-                    boss_bgm.start();
-                }
-
-                System.out.println(time);
-
-                // 产生敌机
-                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
-                creatEnemyAircraft(0.8,400,8);
-
                 // 飞机射出子弹
                 shootAction();
+            }
+            // 每隔enemyCycleDuration产生敌机
+            if(enemy_timeCountAndNewCycleJudge()){
+                if(BossEnemy.bossNum == 0 && counter>200){
+                    bossBlood += 50;
+                    creatBossScore -= 5;
+                    System.out.println("提升难度！boss敌机血量:"+bossBlood+"\t产生boss机的阈值:"+creatBossScore);
+                }
+                // 产生敌机
+                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
+                creatEnemyAircraft(creatBossScore,10,bossBlood,
+                        60,14,30,11);
             }
 
             // 子弹移动
@@ -68,15 +100,11 @@ public class DifficultModelGame extends AbstractGame{
             // 道具移动
             propMoveAction();
 
-            // 为炸弹道具增加观察者（子弹和非boss敌机）
-            for(AbstractProp prop : props){
-                if(prop instanceof BombProp){
-                    addEnemyBulletSucscribe((BombProp) prop);
-                }
-            }
+            // 子弹道具失效
+            bullutPropWorkTime();
 
             // 撞击检测
-            crashCheckAction(10,20,40, 3000);
+            crashCheckAction(5,10,45);
 
             // 后处理
             postProcessAction();

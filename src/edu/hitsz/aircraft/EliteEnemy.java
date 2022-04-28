@@ -17,14 +17,13 @@ public class EliteEnemy extends AbstractEnemyAircraft implements Subscriber {
 
     private StrategyInterface strategy;
 
-    public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp, StrategyInterface shootMode) {
+    public EliteEnemy(int locationX, int locationY, int speedX, double speedY, int hp, StrategyInterface shootMode) {
         super(locationX, locationY, speedX, speedY, hp);
         this.strategy = shootMode;
     }
 
     @Override
     public void bombWork(){
-        System.out.println("Elite失效");
         vanish();
     }
 

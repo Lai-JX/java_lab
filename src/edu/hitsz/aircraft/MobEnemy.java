@@ -14,14 +14,12 @@ import java.util.List;
  */
 public class MobEnemy extends AbstractEnemyAircraft implements Subscriber {
 
-    public MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
+    public MobEnemy(int locationX, int locationY, int speedX, double speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
     }
 
     @Override
     public void bombWork(){
-
-        System.out.println("Mob失效");
         vanish();
     }
 

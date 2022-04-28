@@ -33,14 +33,14 @@ public class HeroAircraft extends AbstractAircraft {
         this.strategy = strategy;
     }
 
-    public static HeroAircraft getInstance(){
+    public static HeroAircraft getInstance(int blood){
         if(heroAircraft == null){
             synchronized (HeroAircraft.class){
                 if(heroAircraft == null){
                     heroAircraft = new HeroAircraft(
                             Main.WINDOW_WIDTH / 2,
                             Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
-                            0, 0, 1000,
+                            0, 0, blood,
                             new DirectShoot());
                 }
             }

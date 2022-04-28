@@ -17,12 +17,12 @@ public class DirectShoot implements StrategyInterface {
      * @return 射击出的子弹List
      */
     @Override
-    public List<BaseBullet> shoot(int LocationX, int LocationY, int SpeedY, int direction, int AircraftType) {
+    public List<BaseBullet> shoot(int LocationX, int LocationY, double SpeedY, int direction, int AircraftType) {
         List<BaseBullet> res = new LinkedList<>();
         int x = LocationX;
         int y = LocationY + direction*2;
         int speedX = 0;
-        int speedY = SpeedY + direction*5;
+        double speedY = SpeedY + direction*5;
         BaseBullet baseBullet;
         for(int i=0; i<shootNum; i++){
             // 子弹发射位置相对飞机位置向前偏移

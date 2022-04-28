@@ -13,13 +13,18 @@ import java.util.concurrent.TimeUnit;
 
 public class CommonModelGame extends AbstractGame{
 
-    /**
-     * 时间间隔(ms)，控制刷新频率
-     */
-    private int timeInterval = 40;
 
     public CommonModelGame(){
+
         super();
+        // 敌机产生周期
+        enemyCycleDuration = 500;
+        // 不产生道具的概率
+        noPropProbability = 0.25;
+        // 子弹道具持续时间
+        bulletPropTime = 5000;
+        // 产生精英敌机的概率
+        eliteEnemyProbability = 0.3;
     }
 
     /**
@@ -33,34 +38,57 @@ public class CommonModelGame extends AbstractGame{
             bgm = new MusicThread("src/videos/bgm.wav");
             bgm.start();
         }
-
+        System.out.println("普通模式：");
+        System.out.println("\t产生boss敌机的阈值:300\t最大敌机数:7\tboss敌机血量:200" +
+                "\n\t精英敌机初始速度:13\t" + "精英敌机血量:60\t普通敌机初始速度:10\t普通敌机血量:30" +
+                "\n\t击落boss敌机得分:40\t击落精英敌机得分:10\t击落普通敌机得分:5" +
+                "\n\t除boss机外提升难度的时间间隔:5s" +
+                "\n\t精英敌机概率初始值为:0.3\t敌机产生周期初始值为:500ms\t不产生道具的概率初始值为:0.25\t子弹道具持续时间初始值为5s");
 
         // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
         Runnable task = () -> {
 
             time += timeInterval;
-
+            // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
+            if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
+                bgm = new MusicThread("src/videos/bgm.wav");
+                bgm.start();
+            }
+            if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+                boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
+                boss_bgm.start();
+            }
 
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
-                // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
-                if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
-                    bgm = new MusicThread("src/videos/bgm.wav");
-                    bgm.start();
-                }
-                if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
-                    boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
-                    boss_bgm.start();
+
+
+//                System.out.println(time);
+
+                // 每隔5秒增加难度
+                if(time % 5000 == 0){
+                    eliteEnemyProbability += 0.01;
+                    System.out.print("提升难度！精英敌机概率:"+Double.parseDouble(String.format("%.2f",eliteEnemyProbability)));
+                    enemyCycleDuration -= 10;
+                    System.out.print("!\t敌机产生周期:"+enemyCycleDuration+"ms");
+                    enemySpeedyImproveRate += 0.01;
+                    System.out.print("!\t新增敌机速度提升倍率:"+Double.parseDouble(String.format("%.2f",enemySpeedyImproveRate)));
+                    noPropProbability += 0.01;
+                    System.out.print("!\t击落精英敌机或boss敌机不产生道具的概率:"+Double.parseDouble(String.format("%.2f",noPropProbability)));
+                    bulletPropTime -= 100;
+                    System.out.println("!\t子弹道具持续时间:"+bulletPropTime+"ms");
                 }
 
-                System.out.println(time);
-
-                // 产生敌机
-                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
-                creatEnemyAircraft(0.7,500,6);
 
                 // 飞机射出子弹
                 shootAction();
+            }
+            // 每隔enemyCycleDuration产生敌机
+            if(enemy_timeCountAndNewCycleJudge()){
+                // 产生敌机
+                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
+                creatEnemyAircraft(300,7,200,
+                        60,13,30,10);
             }
 
             // 子弹移动
@@ -72,23 +100,17 @@ public class CommonModelGame extends AbstractGame{
             // 道具移动
             propMoveAction();
 
-            // 为炸弹道具增加观察者（子弹和非boss敌机）
-            for(AbstractProp prop : props){
-                if(prop instanceof BombProp){
-                    addEnemyBulletSucscribe((BombProp) prop);
-                }
-            }
+            // 子弹道具失效
+            bullutPropWorkTime();
 
             // 撞击检测
-            crashCheckAction(10,20,40, 5000);
+            crashCheckAction(5,10,40);
 
             // 后处理
             postProcessAction();
 
             //每个时刻重绘界面
             repaint();
-
-
 
 
             // 游戏结束检查

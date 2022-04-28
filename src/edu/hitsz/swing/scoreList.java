@@ -36,9 +36,9 @@ public class scoreList {
             dao = new RecordDao("difficultModelScore.txt");
         }
         // 输入姓名
-        String name = JOptionPane.showInputDialog("游戏结束。你的得分是："+ AbstractGame.score+"\n请输入名字");
+        String name = JOptionPane.showInputDialog("游戏结束。你的得分是："+ AbstractGame.getScore()+"\n请输入名字");
         // 增加记录
-        dao.add(new Record(name,AbstractGame.score));
+        dao.add(new Record(name,AbstractGame.getScore()));
         // 写回文件
         try {
             dao.writeToFile();

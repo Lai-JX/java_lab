@@ -54,7 +54,7 @@ public class RecordDao implements DaoInterface{
         // 把文件的内存，解析为一个Object对象
         Object o = ois.readObject();
         // 使用解析后的对象
-        if(o instanceof ArrayList<?>){
+        if(o!=null && o instanceof ArrayList<?>){
             for(Object record : (List<?>) o){
                 records.add(Record.class.cast(record));
             }

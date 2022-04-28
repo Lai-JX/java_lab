@@ -28,12 +28,12 @@ public abstract class AbstractFlyingObject {
     /**
      * x 轴移动速度
      */
-    protected int speedX;
+    protected double speedX;
 
     /**
      * y 轴移动速度
      */
-    protected int speedY;
+    protected double speedY;
 
     /**
      * 图片,
@@ -63,7 +63,7 @@ public abstract class AbstractFlyingObject {
     public AbstractFlyingObject() {
     }
 
-    public AbstractFlyingObject(int locationX, int locationY, int speedX, int speedY) {
+    public AbstractFlyingObject(int locationX, int locationY, int speedX, double speedY) {
         this.locationX = locationX;
         this.locationY = locationY;
         this.speedX = speedX;
@@ -134,7 +134,7 @@ public abstract class AbstractFlyingObject {
         this.speedX = speedX;
     }
 
-    public int getSpeedY() {
+    public double getSpeedY() {
         return speedY;
     }
 

@@ -32,7 +32,7 @@ public class chooseDifficulty {
             @Override
             public void actionPerformed(ActionEvent e){
                 chooseDifficulty.mode = 1;
-                System.out.println("mode=1(简单)");
+                System.out.println("mode=1(简单模式)");
                 System.out.println("音效开启："+chooseDifficulty.soundOpen);
             }
         });
@@ -40,7 +40,7 @@ public class chooseDifficulty {
             @Override
             public void actionPerformed(ActionEvent e){
                 chooseDifficulty.mode = 2;
-                System.out.println("mode=2(普通)");
+                System.out.println("mode=2(普通模式)");
                 System.out.println("音效开启："+chooseDifficulty.soundOpen);
             }
         });
@@ -48,7 +48,7 @@ public class chooseDifficulty {
             @Override
             public void actionPerformed(ActionEvent e){
                 chooseDifficulty.mode = 3;
-                System.out.println("mode=3(困难)");
+                System.out.println("mode=3(困难模式)");
                 System.out.println("音效开启："+chooseDifficulty.soundOpen);
             }
         });

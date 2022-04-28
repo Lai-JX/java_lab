@@ -28,7 +28,7 @@ public abstract class AbstractGame extends JPanel {
     /**
      * 时间间隔(ms)，控制刷新频率
      */
-    private int timeInterval = 40;
+    protected int timeInterval = 40;
 
     protected final HeroAircraft heroAircraft;
 
@@ -46,20 +46,39 @@ public abstract class AbstractGame extends JPanel {
     protected int enemyNumber = 0;
 
     protected boolean gameOverFlag = false;
-    public static int score = 0;
+
+
+
+    protected static int score = 0;
     protected int time = 0;
-    protected int counter = 0;
+    protected int counter = 0;// 标志产生敌机的阈值
     protected int BulletPropStart = 0;
     /**
      * 周期（ms)
-     * 指示子弹的发射、敌机的产生频率
+     * 指示子弹的发射
      */
-    private int cycleDuration = 600;
+    protected int cycleDuration = 500;
     private int cycleTime = 0;
+    /**
+     * 周期（ms)
+     * 指示敌机的产生频率
+     */
+    protected int enemyCycleDuration = 400;
+    protected int enemyCycleTime = 0;
+    // 敌机速度提升倍率
+    protected double enemySpeedyImproveRate = 1.0;
+    // 不产生道具的概率
+    protected double noPropProbability = 0.1;
+    // 子弹道具持续时间
+    protected int bulletPropTime = 8000;
+    // 产生精英敌机的概率
+    protected double eliteEnemyProbability = 0.3;
+
+
 
 
     public AbstractGame() {
-        heroAircraft = HeroAircraft.getInstance();
+        heroAircraft = HeroAircraft.getInstance(1000);
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -83,6 +102,14 @@ public abstract class AbstractGame extends JPanel {
 
     }
 
+    public static void setScore(int score) {
+        AbstractGame.score = score;
+    }
+
+    public static int getScore() {
+        return score;
+    }
+
     public boolean isGameOverFlag() {
         return gameOverFlag;
     }
@@ -94,106 +121,107 @@ public abstract class AbstractGame extends JPanel {
      */
     public void action() {
 
-        if(chooseDifficulty.isSoundOpen()){
-            bgm = new MusicThread("src/videos/bgm.wav");
-            bgm.start();
-        }
-
-
-        // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
-        Runnable task = () -> {
-
-            time += timeInterval;
-
-
-            // 周期性执行（控制频率）
-            if (timeCountAndNewCycleJudge()) {
-                // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
-                if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
-                    bgm = new MusicThread("src/videos/bgm.wav");
-                    bgm.start();
-                }
-                if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
-                    boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
-                    boss_bgm.start();
-                }
-
-                System.out.println(time);
-
-
-                // 产生敌机
-                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
-                creatEnemyAircraft(0.5,5,600);
-
-                // 飞机射出子弹
-                shootAction();
-            }
-
-            // 子弹移动
-            bulletsMoveAction();
-
-            // 飞机移动
-            aircraftsMoveAction();
-
-            // 道具移动
-            propMoveAction();
-
-            // 为炸弹道具增加观察者（子弹和非boss敌机）
-            for(AbstractProp prop : props){
-                if(prop instanceof BombProp){
-                    addEnemyBulletSucscribe((BombProp) prop);
-                }
-            }
-
-            // 撞击检测
-            crashCheckAction(10,20,40, 8000);
-
-            // 后处理
-            postProcessAction();
-
-            //每个时刻重绘界面
-            repaint();
-
-
-
-
-            // 游戏结束检查
-            if (heroAircraft.getHp() <= 0) {
-                // 游戏结束音乐
-                if(chooseDifficulty.isSoundOpen()){
-                    new MusicThread("src/videos/game_over.wav").start();
-                    bgm.setStop(true);
-                    if(BossEnemy.bossNum == 1){
-                        boss_bgm.setStop(true);
-                    }
-                }
-
-                // 游戏结束
-                gameOverFlag = true;
-                executorService.shutdown();
-
-                System.out.println("Game Over!");
-                synchronized (FrameThread.class){// 释放线程game，回到main
-                    notifyAll();
-                }
-            }
-
-        };
-
-        /**
-         * 以固定延迟时间进行执行
-         * 本次任务执行完成后，需要延迟设定的延迟时间，才会执行新的任务
-         */
-        executorService.scheduleWithFixedDelay(task, timeInterval, timeInterval, TimeUnit.MILLISECONDS);
+//        if(chooseDifficulty.isSoundOpen()){
+//            bgm = new MusicThread("src/videos/bgm.wav");
+//            bgm.start();
+//        }
+//
+//
+//        // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
+//        Runnable task = () -> {
+//
+//            time += timeInterval;
+//            // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
+//            if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
+//                bgm = new MusicThread("src/videos/bgm.wav");
+//                bgm.start();
+//            }
+//            if(chooseDifficulty.isSoundOpen() && BossEnemy.bossNum==1 && !boss_bgm.isAlive()){
+//                boss_bgm = new MusicThread("src/videos/boss_bgm.wav");
+//                boss_bgm.start();
+//            }
+//
+//            // 周期性执行（控制频率）
+//            if (timeCountAndNewCycleJudge()) {
+//
+//
+//                System.out.println(time);
+//
+//
+//                // 产生敌机
+//                // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
+//                creatEnemyAircraft(5,600,600,60,10,30,10);
+//
+//                // 飞机射出子弹
+//                shootAction();
+//            }
+//
+//            // 子弹移动
+//            bulletsMoveAction();
+//
+//            // 飞机移动
+//            aircraftsMoveAction();
+//
+//            // 道具移动
+//            propMoveAction();
+//
+//            // 子弹道具失效
+//            bullutPropWorkTime();
+//
+//            // 撞击检测
+//            crashCheckAction(10,20,40);
+//
+//            // 后处理
+//            postProcessAction();
+//
+//            //每个时刻重绘界面
+//            repaint();
+//
+//
+//
+//
+//            // 游戏结束检查
+//            if (heroAircraft.getHp() <= 0) {
+//                // 游戏结束音乐
+//                if(chooseDifficulty.isSoundOpen()){
+//                    new MusicThread("src/videos/game_over.wav").start();
+//                    bgm.setStop(true);
+//                    if(BossEnemy.bossNum == 1){
+//                        boss_bgm.setStop(true);
+//                    }
+//                }
+//
+//                // 游戏结束
+//                gameOverFlag = true;
+//                executorService.shutdown();
+//
+//                System.out.println("Game Over!");
+//                synchronized (FrameThread.class){// 释放线程game，回到main
+//                    notifyAll();
+//                }
+//            }
+//
+//        };
+//
+//        /**
+//         * 以固定延迟时间进行执行
+//         * 本次任务执行完成后，需要延迟设定的延迟时间，才会执行新的任务
+//         */
+//        executorService.scheduleWithFixedDelay(task, timeInterval, timeInterval, TimeUnit.MILLISECONDS);
     }
 
     //***********************
     //      Action 各部分
     //***********************
 
-    // 产生敌机
-    // 参数:精英敌机出现的概论eliteEnemyProbability,产生boss机的阈值creatBoss_Score,最大敌机数量
-    protected void creatEnemyAircraft(double eliteEnemyProbability, int creatBoss_Score, int enemyMaxNumber){
+    /** 产生敌机
+    * 参数:精英敌机出现的概论eliteEnemyProbability,产生boss机的阈值creatBoss_Score,最大敌机数量enemyMaxnumber,boss敌机的血量boosBlood
+    *    精英敌机的血量eliteEnemyBlood，精英敌机的竖直方向速度精英敌机的血量eliteEnemySpeedY,普通敌机的血量mobEnemyBlood，普通敌机的竖直方向速度精英敌机的血量mobEnemySpeedY
+    *
+     */
+    protected void creatEnemyAircraft(int creatBoss_Score, int enemyMaxNumber,int boosBlood,
+                                        int eliteEnemyBlood,int eliteEnemySpeedY,int mobEnemyBlood,int mobEnemySpeedY){
+        if(eliteEnemyProbability>0.95){eliteEnemyProbability=0.95;}
         // 新敌机产生 随机产生一架普通敌机或精英敌机
         if (enemyAircrafts.size() < enemyMaxNumber) {
             enemyNumber++;
@@ -203,8 +231,8 @@ public abstract class AbstractGame extends JPanel {
                         (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())) * 1,
                         (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
                         (int)(Math.random() * 11 -5),
-                        10,
-                        60
+                        eliteEnemySpeedY*enemySpeedyImproveRate,
+                        eliteEnemyBlood
                 ));
             } else {
                 enemyFactory = new MobEnemyFactory();
@@ -212,11 +240,12 @@ public abstract class AbstractGame extends JPanel {
                         (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())) * 1,
                         (int) (Math.random() * Main.WINDOW_HEIGHT * 0.2) * 1,
                         0,
-                        10,
-                        30
+                        mobEnemySpeedY,
+                        mobEnemyBlood
                 ));
             }
-            if(BossEnemy.bossNum == 0 && counter >= creatBoss_Score){   // 超过阈值产生一架boss敌机
+            // 超过阈值产生一架boss敌机,以bossBlood=0标志简单模式，不产生boss机
+            if(boosBlood!=0 && BossEnemy.bossNum == 0 && counter >= creatBoss_Score){
                 counter = 0;                                            // 恢复记录阶段得分
                 enemyFactory = new BossEnemyFactory();
                 enemyAircrafts.add(enemyFactory.createEnemy(
@@ -224,7 +253,7 @@ public abstract class AbstractGame extends JPanel {
                         (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + ImageManager.BOSS_ENEMY_IMAGE.getHeight()) * 1,
                         1,
                         0,
-                        600
+                        boosBlood
                 ));
                 if(chooseDifficulty.isSoundOpen()){
                     boss_bgm = new MusicThread("src/videos/bgm_boss.wav");
@@ -241,6 +270,26 @@ public abstract class AbstractGame extends JPanel {
         if (cycleTime >= cycleDuration && cycleTime - timeInterval < cycleTime) {
             // 跨越到新的周期
             cycleTime %= cycleDuration;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected void bullutPropWorkTime(){
+        // 道具持续bulletPropTime后失效
+        if(BulletPropStart!=0 && time-BulletPropStart > bulletPropTime){
+            heroAircraft.setStrategy(new DirectShoot());
+            BulletPropStart = 0;
+        }
+    }
+
+    // 产生敌机的周期
+    protected boolean enemy_timeCountAndNewCycleJudge() {
+        enemyCycleTime += timeInterval;
+        if (enemyCycleTime >= enemyCycleDuration && enemyCycleTime - timeInterval < enemyCycleTime) {
+            // 跨越到新的周期
+            enemyCycleTime %= enemyCycleDuration;
             return true;
         } else {
             return false;
@@ -293,8 +342,9 @@ public abstract class AbstractGame extends JPanel {
      * 3. 英雄获得补给
      * 需要根据模式对应改变
      * 参数：击落Mod敌机增加的分数mobScore，击落Elite敌机增加的分数eliteScore，击落boss敌机增加的分数，子弹道具持续时间：bulletPropTime
+     *      不产生道具的概率：noPropProbability
      */
-    protected void crashCheckAction(int mobScore, int eliteScore, int bossScore, int bulletPropTime) {
+    protected void crashCheckAction(int mobScore, int eliteScore, int bossScore) {
         // TODO 敌机子弹攻击英雄
         for (BaseBullet enemyBullet : enemyBullets) {
             if (enemyBullet.notValid()) {
@@ -351,9 +401,11 @@ public abstract class AbstractGame extends JPanel {
                                 }
                             }
                             // 如果被击落的是精英敌机或boss，则随机产生道具或不产生道具
-                            Random rd = new Random();
-                            int x = rd.nextInt(10);
-                            if(x >= 0 && x < 3){//30%概论获得加血道具
+//                            Random rd = new Random();
+//                            int x = rd.nextInt(10);
+                            double x = Math.random();
+                            double step = (1-noPropProbability)/3;
+                            if(x >= 0 && x < step){//获得加血道具
                                 propFactory = new BloodPropFactory();
                                 props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
@@ -361,19 +413,16 @@ public abstract class AbstractGame extends JPanel {
                                         0,
                                         5));
                             }
-                            else if( x >= 3 && x < 6){//30%概论获得爆炸道具
-                                System.out.println("bomb");
+                            else if( x >= step && x < 2*step){//获得爆炸道具
                                 propFactory = new BombPropFactory();
                                 BombProp bombProp = (BombProp) propFactory.createProp(
                                         enemyAircraft.getLocationX(),
                                         enemyAircraft.getLocationY(),
                                         0,
                                         5);
-                                // 为炸弹道具增加观察者（子弹和非boss敌机）
-                                addEnemyBulletSucscribe(bombProp);
                                 props.add(bombProp);
                             }
-                            else if( x >= 6 && x < 9){//30%概论获得子弹道具
+                            else if( x >= 2*step && x < 3*step){//获得子弹道具
                                 propFactory = new BulletPropFactory();
                                 props.add(propFactory.createProp(
                                         enemyAircraft.getLocationX(),
@@ -382,7 +431,7 @@ public abstract class AbstractGame extends JPanel {
                                         5));
                             }
                             else{//未获得道具
-
+                                System.out.println("No prop generated!");
                             }
 
                         }
@@ -401,12 +450,12 @@ public abstract class AbstractGame extends JPanel {
         for(AbstractProp prop : props){
             if(prop.crash(heroAircraft) || heroAircraft.crash(prop)){
                 if(!prop.notValid()){
-//                    prop.propWork();
                     prop.vanish();
-//                    System.out.println(prop.notValid());
                     if(prop instanceof BloodProp){  //获得加血道具，增加30血
                         ((BloodProp)prop).propWork(heroAircraft);
                     }else if(prop instanceof BombProp){
+                        // 为炸弹道具增加观察者（子弹和非boss敌机）,并增加得分
+                        addEnemyBulletSucscribe((BombProp) prop,mobScore,eliteScore);
                         ((BombProp)prop).propWork(heroAircraft);
                     }else{
                         ((BulletProp)prop).propWork(heroAircraft);
@@ -416,22 +465,20 @@ public abstract class AbstractGame extends JPanel {
 
             }
         }
-        // 道具持续3秒后失效
-        if(BulletPropStart!=0 && time-BulletPropStart > 3000){
-            heroAircraft.setStrategy(new DirectShoot());
-            BulletPropStart = 0;
-        }
     }
 
     // 为炸弹道具增加观察者（子弹和非boss敌机）
-    protected void addEnemyBulletSucscribe(BombProp bombProp){
+    protected void addEnemyBulletSucscribe(BombProp bombProp,int mobScore, int eliteScore){
         // 添加观察者（道具生效需要销毁的敌机）
         for(AbstractEnemyAircraft enemy : enemyAircrafts){
             if(enemy instanceof EliteEnemy){
                 bombProp.addSubscriber((EliteEnemy)enemy);
-
+                score += eliteScore;
+                counter +=eliteScore;
             }else if(enemy instanceof MobEnemy){
                 bombProp.addSubscriber((MobEnemy)enemy);
+                score += mobScore;
+                counter += mobScore;
             }
         }
 
@@ -516,7 +563,7 @@ public abstract class AbstractGame extends JPanel {
         int y = 25;
         g.setColor(new Color(16711680));
         g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        g.drawString("SCORE:" + this.score, x, y);
+        g.drawString("SCORE:" + score, x, y);
         y = y + 20;
         g.drawString("LIFE:" + this.heroAircraft.getHp(), x, y);
     }

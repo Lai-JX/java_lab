@@ -16,7 +16,7 @@ public class BossEnemy extends AbstractEnemyAircraft {
     private StrategyInterface strategy;
     public static int bossNum = 0;        //boss敌机数量
 
-    public BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp, StrategyInterface strategy) {
+    public BossEnemy(int locationX, int locationY, int speedX, double speedY, int hp, StrategyInterface strategy) {
         super(locationX, locationY, speedX, speedY, hp);
         this.strategy = strategy;
         bossNum++;
