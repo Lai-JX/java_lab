@@ -1,0 +1,60 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class AbstractGame
+{
+    + action():void
+}
+class EasyModelGame
+{
+    + action():void
+}
+class CommonModelGame
+{
+    + action():void
+}
+class DifficultModelGame
+{
+    + action():void
+}
+
+interface Subscribe
+{
+    bombWork():void
+}
+class EliteEnemy {
+    + EliteEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
+    + bombWork():void
+}
+
+class MobEnemy {
+    + MobEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
+    + bombWork():void
+}
+class EnemyBullet{
+    + EnemyBullet(int locationX, int locationY, int speedX, double speedY, int power)
+    + bombWork():void
+
+}
+
+class BombProp{
+    + ArrayList<Subscriber>enemyList
+    + BombProp(int locationX, int locationY, int speedX, int speedY)
+    + propWork(HeroAircraft heroAircraft):void
+    + addSubscriber(Subscriber s):void
+    + unSubscriber():void
+}
+AbstractGame<|--EasyModelGame
+AbstractGame<|--CommonModelGame
+AbstractGame<|-- DifficultModelGame
+EasyModelGame..>BombProp
+CommonModelGame..>BombProp
+DifficultModelGame..>BombProp
+BombProp o-->Subscribe
+Subscribe <|..EnemyBullet
+Subscribe <|..MobEnemy
+Subscribe <|..EliteEnemy
+
+
+
+@enduml

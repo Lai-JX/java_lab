@@ -5,14 +5,14 @@ abstract class AbstractFlyingObject
 {
     # int locationX
     # int locationY
-    # int speedX
-    # int speedY
+    # double speedX
+    # double speedY
     # BufferedImage image
     # int width
     # int height
     # boolean isValid
 
-    + AbstractFlyingObject(int locationX, int locationY, int speedX, int speedY)
+    + AbstractFlyingObject(int locationX, int locationY, int speedX, double speedY)
     + forward():void
     + crash(AbstractFlyingObject flyingObject):boolean
     + setLocation(double locationX, double locationY):void
@@ -29,10 +29,9 @@ abstract class AbstractAircraft
 {
 	# int maxHp
     # int hp
-    + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + AbstractAircraft(int locationX, int locationY, int speedX, double speedY, double hp)
     + decreaseHp(int decrease):void
     + getHp():int
-    + {abstract} shoot():List<BaseBullet>
  }
 
 abstract class BaseBullet
@@ -43,13 +42,16 @@ abstract class BaseBullet
 	+ getPower():int
 }
 
+
 AbstractFlyingObject <|-- AbstractAircraft
 AbstractFlyingObject <|-- BaseBullet
 AbstractFlyingObject <|-- AbstractProp
 
 AbstractAircraft <|-- HeroAircraft
-AbstractAircraft <|-- EliteEnemy
-AbstractAircraft <|-- MobEnemy
+AbstractAircraft <|-- AbstractEnemyAircraft
+AbstractEnemyAircraft <|-- EliteEnemy
+AbstractEnemyAircraft <|-- MobEnemy
+AbstractEnemyAircraft <|-- BossEnemy
 
 BaseBullet <|-- HeroBullet
 BaseBullet <|-- EnemyBullet
@@ -57,58 +59,84 @@ BaseBullet <|-- EnemyBullet
 AbstractProp <|-- BloodProp
 AbstractProp <|-- BombProp
 AbstractProp <|-- BulletProp
+EnemyBullet..>Subscriber
+EliteEnemy..>Subscriber
+MobEnemy..>Subscriber
 
 class HeroAircraft {
-    - int shootNum
-    - int power
-    - int direction
-    + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    - StrategyInterface strategy
+    - HeroAircraft heroAircraft
+    + HeroAircraft(int locationX, int locationY, int speedX, double speedY, int hp,StrategyInterface strategy)
     + forward():void
-    + shoot():List<BaseBullet>
+    + getInstance(int blood):HeroAircraft
+    + executeStrategy():List<BaseBullet>
+    + setStrategy(StrategyInterface strategy):void
+    + gainHp(int blood):void
 }
-
+class BossEnemy{
+    - StrategyInterface strategy
+    + BossEnemy(int locationX, int locationY, int speedX, double speedY, int hp,StrategyInterface strategy);
+    + executeStrategy():List<BaseBullet>
+    + setStrategy(StrategyInterface strategy):void
+    + decreaseHp(double decrease):void
+}
 class EliteEnemy {
-    - int shootNum
-    - int power
-    - int direction
-    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + shoot():List<BaseBullet>
+    - StrategyInterface strategy
+    + EliteEnemy(int locationX, int locationY, int speedX, double speedY, int hp,StrategyInterface strategy)
+    + executeStrategy():List<BaseBullet>
+    + bombWork():void
+    + setStrategy(StrategyInterface strategy):void
 }
 
 class MobEnemy {
-    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + forward():void
+    + MobEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
     + shoot():List<BaseBullet>
 }
 
 class HeroBullet {
     + HeroBullet(int locationX, int locationY,
-     int speedX, int speedY, int power)
+     int speedX, double speedY, int power)
+
 }
 
 class EnemyBullet {
     + EnemyBullet(int locationX, int locationY,
-     int speedX, int speedY, int power)
+     int speedX, double speedY, int power)
+     + bombWork():void
 }
+interface Subscriber{
+    + bombWork():void
+}
+
 
 abstract class AbstractProp {
     + AbstractProp(int locationX, int locationY, int speedX, int speedY)
-    + propWork():void
+    + propWork(HeroAircraft heroAircraft):void
+}
+
+abstract AbstractEnemyAircraft{
+    + AbstractEnemyAircraft(int locationX, int locationY, int speedX, double speedY, int hp)
 }
 
 class BloodProp {
     + BloodProp(int locationX, int locationY, int speedX, int speedY)
-    + propWork():void
+    + propWork(HeroAircraft heroAircraft):void
 }
 
 class BombProp {
+    + ArrayList<Subscriber> enemyList
     + BombProp(int locationX, int locationY, int speedX, int speedY)
-    + propWork():void
+    + propWork(HeroAircraft heroAircraft):void
+    + addSubscriber(Subscriber s):void
+    + unSubscriber():void
 }
 
 class BulletProp {
+
     + BulletProp(int locationX, int locationY, int speedX, int speedY)
-    + propWork():void
+    + propWork(HeroAircraft heroAircraft):void
+
 }
+
 
 @enduml

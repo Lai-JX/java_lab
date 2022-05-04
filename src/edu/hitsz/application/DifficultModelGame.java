@@ -39,6 +39,7 @@ public class DifficultModelGame extends AbstractGame{
         }
         System.out.println("困难模式：");
         System.out.println("\t产生boss敌机的初始阈值:200\t最大敌机数:10\tboss敌机初始血量:200" +
+                "\n\t英雄机子弹伤害:30\t敌机子弹初始伤害:10" +
                 "\n\t精英敌机初始速度:14\t" + "精英敌机血量:60\t普通敌机初始速度:11\t普通敌机血量:30" +
                 "\n\t击落boss敌机得分:45\t击落精英敌机得分:10\t击落普通敌机得分:5" +
                 "\n\t除boss机外提升难度的时间间隔:4s" +
@@ -63,13 +64,13 @@ public class DifficultModelGame extends AbstractGame{
 
 
                 // 每隔4秒提升难度
-                if(time % 4000 == 0){
+                if(time % 3990 == 0){
                     eliteEnemyProbability += 0.02;
                     System.out.print("提升难度！精英敌机概率:"+Double.parseDouble(String.format("%.2f",eliteEnemyProbability)));
                     enemyCycleDuration -= 20;
                     System.out.print("!\t敌机产生周期:"+enemyCycleDuration+"ms");
-                    enemySpeedyImproveRate += 0.02;
-                    System.out.print("!\t新增敌机速度提升倍率:"+Double.parseDouble(String.format("%.2f",enemySpeedyImproveRate)));
+                    enemyImproveRate += 0.02;
+                    System.out.print("!\t新增敌机属性提升倍率:"+Double.parseDouble(String.format("%.2f",enemyImproveRate)));
                     noPropProbability += 0.02;
                     System.out.print("!\t击落精英敌机或boss敌机不产生道具的概率:"+Double.parseDouble(String.format("%.2f",noPropProbability)));
                     bulletPropTime -= 150;
@@ -80,7 +81,7 @@ public class DifficultModelGame extends AbstractGame{
             }
             // 每隔enemyCycleDuration产生敌机
             if(enemy_timeCountAndNewCycleJudge()){
-                if(BossEnemy.bossNum == 0 && counter>200){
+                if(BossEnemy.bossNum == 0 && counter>creatBossScore){
                     bossBlood += 50;
                     creatBossScore -= 5;
                     System.out.println("提升难度！boss敌机血量:"+bossBlood+"\t产生boss机的阈值:"+creatBossScore);

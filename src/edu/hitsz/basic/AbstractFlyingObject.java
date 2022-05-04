@@ -173,5 +173,9 @@ public abstract class AbstractFlyingObject {
         isValid = false;
     }
 
+    public void valid(){
+        isValid = true;
+    }
+
 }
 

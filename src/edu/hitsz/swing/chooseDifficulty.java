@@ -19,6 +19,10 @@ public class chooseDifficulty {
         return mode;
     }
 
+    public static void setMode(int mode) {
+        chooseDifficulty.mode = mode;
+    }
+
     private static int mode = 0; // 1表示简单模式，2表示普通模式，3表示困难模式
 
     public static boolean isSoundOpen() {

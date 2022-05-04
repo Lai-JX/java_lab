@@ -52,7 +52,7 @@ class BossEnemy {
     + executeStrategy():List<BaseBullet>
 
 
-    +void decreaseHp(int decrease):void
+    +void decreaseHp(double decrease):void
 }
 class EliteEnemy {
         -StrategyInterface strategy

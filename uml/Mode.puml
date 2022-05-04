@@ -1,0 +1,94 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class AbstractGame{
+    # int bulletPropTime
+    # double enemyImproveRate
+    # List<BaseBullet> enemyBullets
+    # int backGroundTop
+    # ProFactory prpFactory
+    # int timeInterval
+    - int cycleTime
+    # List<BaseBullet> heroBullets
+    # double noPropProbability
+    # int cycleDuration
+    # double eliteEnemyProbability
+    # ScheduledExecutorService executorService
+    # HeroAircraft heroAircraft
+    # List<AstractEnemyAircraft>
+    # MusicThread boss_bgm
+    # MusicThread bgm
+    # int BulletPropStart
+    # EnemyFactory enemyFactory
+    # int enemyCycleDuration
+    # int counter
+    # int enemyNumber
+    # int enemyCycleTime
+    # List<AbstractProp> props
+    # boolean gameOverFlag
+    # int score
+    # int time
+    + AbstractGame()
+    # timeCountAndNewCycleJudge():boolean
+    drawBackGround(Graphics):void
+    # shootAction():void
+    # postProcessAction():void
+    # enemy_timeCountAndNewCycleJudge():boolean
+    # creatEnemyAircraft(int creatBoss_Score, int enemyMaxNumber,int boosBlood,
+                                                                 int eliteEnemyBlood,int eliteEnemySpeedY,int mobEnemyBlood,int mobEnemySpeedY):void
+    - paintImageWithPositionRevised(Graphics g, List<? extends AbstractFlyingObject> objects):void
+    - paint(Graphics):void
+    # propMoveAction():void
+    - paintScoreAndLife(Graphics g):void
+    + isGameOverFlag():boolean
+    + getScore():int
+    # addEnemyBulletSubscribe(BombProp bombProp,int mobScore, int eliteScore):void
+    # aircraftMoveAction():void
+    + action():void
+    # crashCheckAction(int mobScore, int eliteScore, int bossScore):void
+    # bulletPropWorkTime():void
+    # bulletsMoveAction():void
+
+}
+class EasyModelGame{
+    + EasyModelGame();
+    + drawBackGround(Graphics g):void
+    + action():void
+}
+class CommonModelGame{
+    + CommonModelGame();
+    + drawBackGround(Graphics g):void
+    + action():void
+}
+class DifficultModelGame{
+    - int boosBlood
+    - int creatBoss_Score
+    + DifficultModelGame();
+    + drawBackGround(Graphics g):void
+    + action():void
+}
+class FrameThread{
+    - boolean chooseFinish
+    - int WINFOW_HEIGHT
+    - int WINFOW_WIDTH
+    - chooseDiffichlty c
+    - JFrame frame
+    - AbstractGame game
+    + FrameThread():void
+    + gameWork():void
+    + chooseWork():void
+    + showScoreWork():void
+}
+class Main{
+    + main(String[] args):void
+}
+
+FrameThread-->AbstractGame
+Main..>FrameThread
+AbstractGame<|--EasyModelGame
+AbstractGame<|-- DifficultModelGame
+AbstractGame<|--CommonModelGame
+
+
+
+@enduml

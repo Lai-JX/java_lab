@@ -25,6 +25,7 @@ public class CommonModelGame extends AbstractGame{
         bulletPropTime = 5000;
         // 产生精英敌机的概率
         eliteEnemyProbability = 0.3;
+
     }
 
     /**
@@ -39,7 +40,8 @@ public class CommonModelGame extends AbstractGame{
             bgm.start();
         }
         System.out.println("普通模式：");
-        System.out.println("\t产生boss敌机的阈值:300\t最大敌机数:7\tboss敌机血量:200" +
+        System.out.println("\t产生boss敌机的阈值:300\t最大敌机数:7\tboss敌机血量:400" +
+                "\n\t英雄机子弹伤害:30\t敌机子弹初始伤害:10" +
                 "\n\t精英敌机初始速度:13\t" + "精英敌机血量:60\t普通敌机初始速度:10\t普通敌机血量:30" +
                 "\n\t击落boss敌机得分:40\t击落精英敌机得分:10\t击落普通敌机得分:5" +
                 "\n\t除boss机外提升难度的时间间隔:5s" +
@@ -66,13 +68,13 @@ public class CommonModelGame extends AbstractGame{
 //                System.out.println(time);
 
                 // 每隔5秒增加难度
-                if(time % 5000 == 0){
+                if(time % 5100 == 0){
                     eliteEnemyProbability += 0.01;
                     System.out.print("提升难度！精英敌机概率:"+Double.parseDouble(String.format("%.2f",eliteEnemyProbability)));
                     enemyCycleDuration -= 10;
                     System.out.print("!\t敌机产生周期:"+enemyCycleDuration+"ms");
-                    enemySpeedyImproveRate += 0.01;
-                    System.out.print("!\t新增敌机速度提升倍率:"+Double.parseDouble(String.format("%.2f",enemySpeedyImproveRate)));
+                    enemyImproveRate += 0.01;
+                    System.out.print("!\t新增敌机属性提升倍率:"+Double.parseDouble(String.format("%.2f",enemyImproveRate)));
                     noPropProbability += 0.01;
                     System.out.print("!\t击落精英敌机或boss敌机不产生道具的概率:"+Double.parseDouble(String.format("%.2f",noPropProbability)));
                     bulletPropTime -= 100;
@@ -87,7 +89,7 @@ public class CommonModelGame extends AbstractGame{
             if(enemy_timeCountAndNewCycleJudge()){
                 // 产生敌机
                 // 参数:精英敌机出现的概论eliteEnemyProbability，产生boss机的阈值
-                creatEnemyAircraft(300,7,200,
+                creatEnemyAircraft(300,7,400,
                         60,13,30,10);
             }
 

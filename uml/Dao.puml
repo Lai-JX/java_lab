@@ -13,16 +13,28 @@ interface DaoInterface {
         findFirst():Record
         sortAndPrintf():void
         showAll():void
+        readFromFile()throws IOException, ClassNotFoundException:void
+        writeToFile() throws IOException:void
+        sort():void
+        getLength():int
+        ToString():String[][]
+        delete(int index)boolean
+        findLast()Record
 }
 class RecordDao{
     - ArrayList<Record> records
-    + readFromFile():void
-    + writeToFile():void
+    + readFromFile()throws IOException, ClassNotFoundException:void
+    + writeToFile()throws IOException:void
     +getAllRecord():List<Record>
     +add(Record record):void
     +findFirst():Record
     +sortAndPrintf():void
     +showAll():void
+    +sort():void
+    +getLength():int
+    +ToString():String[][]
+    +delete(int index)boolean
+    +findLast()Record
 }
 class Record{
         -String name;

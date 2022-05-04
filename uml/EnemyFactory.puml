@@ -2,60 +2,77 @@
 'https://plantuml.com/class-diagram
 
 
-class game
+abstract class AbstractGame
 {
     + action():void
 
 }
+class EasyModelGame
+{
+    + action():void
+}
+class CommonModelGame
+{
+    + action():void
+}
+class DifficultModelGame
+{
+    + action():void
+}
+
+
 
 
 
 abstract class EnemyAircraft
 {
-    + EnemyAircraft(int locationX, int locationY, int speedX, int speedY,int hp)
+    + EnemyAircraft(int locationX, int locationY, int speedX, double speedY,int hp)
 }
 interface EnemyFactory
 {
-    EnemyAircraft createEnemy(int locationX, int locationY, int speedX, int speedY,int hp)
+    EnemyAircraft createEnemy(int locationX, int locationY, int speedX, double speedY,int hp)
 }
 class BossEnemyFactory
 {
-    + createEnemy(int locationX, int locationY, int speedX, int speedY,int hp):EnemyAircraft
+    + createEnemy(int locationX, int locationY, int speedX, double speedY,int hp):EnemyAircraft
 }
 class EliteEnemyFactory
 {
-    + createEnemy(int locationX, int locationY, int speedX, int speedY,int hp):EnemyAircraft
+    + createEnemy(int locationX, int locationY, int speedX, double speedY,int hp):EnemyAircraft
 }
 class MobEnemyFactory
 {
-    + createEnemy(int locationX, int locationY, int speedX, int speedY,int hp):EnemyAircraft
+    + createEnemy(int locationX, int locationY, int speedX, double speedY,int hp):EnemyAircraft
 }
 
 
 class BossEnemy {
-    - int shootNum
-    - int power
-    - int direction
-    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + shoot():List<BaseBullet>
+    + BossEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
+    + executeStrategy()List<BaseBullet>
 }
 
 class EliteEnemy {
-    - int shootNum
-    - int power
-    - int direction
-    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + shoot():List<BaseBullet>
+    + EliteEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
+    + executeStrategy()List<BaseBullet>
+
+    + bombWork():void
 }
 
 class MobEnemy {
-    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + MobEnemy(int locationX, int locationY, int speedX, double speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
+    + bombWork():void
 }
 
-game..>EnemyFactory
-game..>EnemyAircraft
+AbstractGame<|--EasyModelGame
+AbstractGame<|--CommonModelGame
+AbstractGame<|-- DifficultModelGame
+EasyModelGame..>EnemyFactory
+EasyModelGame..>EnemyAircraft
+CommonModelGame..>EnemyFactory
+CommonModelGame..>EnemyAircraft
+DifficultModelGame..>EnemyFactory
+DifficultModelGame..>EnemyAircraft
 
 EnemyFactory<|..BossEnemyFactory
 EnemyFactory<|..EliteEnemyFactory

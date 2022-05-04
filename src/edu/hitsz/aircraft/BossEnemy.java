@@ -32,7 +32,7 @@ public class BossEnemy extends AbstractEnemyAircraft {
 
 
     @Override
-    public void decreaseHp(int decrease){
+    public void decreaseHp(double decrease){
         hp -= decrease;
         if(hp <= 0) {
             hp = 0;

@@ -20,6 +20,7 @@ public class scoreList {
     private JTable scoreTable;
     private JScrollPane tableScorllPanel;
     private JButton deleteButton;
+    private JButton reStartButton;
     private JOptionPane optionPane;
     private RecordDao dao;
     private DefaultTableModel model;
@@ -64,6 +65,12 @@ public class scoreList {
                     dao.delete(row);
                     TableData();
                 }
+            }
+        });
+        reStartButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                chooseDifficulty.setMode(0);
             }
         });
     }

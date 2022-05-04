@@ -34,7 +34,8 @@ public class BombProp extends AbstractProp{
     }
 
     // 减少观察者
-    public void unSubscriber(Subscriber s){
-        enemyList.remove(s);
+    public void unSubscriber(){
+//        enemyList.remove(s);
+        enemyList.removeAll(enemyList);
     }
 }

@@ -14,7 +14,7 @@ public class EasyModelGame extends AbstractGame{
         noPropProbability = 0.1;
         bulletPropTime = 8000;
         eliteEnemyProbability = 0.3;
-        timeInterval = 40;
+        timeInterval = 30;
     }
 
     /**
@@ -30,15 +30,16 @@ public class EasyModelGame extends AbstractGame{
         }
         System.out.println("简单模式：");
         System.out.println("\t不产生boss敌机\t最大敌机数:5" +
-                "\n\t精英敌机速度:10\t" + "精英敌机血量:30\t普通敌机速度:10\t普通敌机血量:30" +
+                "\n\t子弹伤害:30\t精英敌机速度:10\t" + "精英敌机血量:30\t普通敌机速度:10\t普通敌机血量:30" +
                 "\n\t击落精英敌机得分:20\t击落普通敌机得分:10" +
                 "\n\t不随时间提升难度"+
-                "\n\t精英敌机概率初始值为:0.3\t不产生道具的概率初始值为:0.1\t子弹道具持续时间初始值为8s");
+                "\n\t精英敌机概率为:0.3\t不产生道具的概率为:0.1\t子弹道具持续时间初始值为8s");
 
         // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
         Runnable task = () -> {
 
             time += timeInterval;
+            System.out.println(time);
             // bgm和boss_bgm线程是否失效，失效则重新添加，以实现循环播放
             if(chooseDifficulty.isSoundOpen() && !bgm.isAlive()){
                 bgm = new MusicThread("src/videos/bgm.wav");
